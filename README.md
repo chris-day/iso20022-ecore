@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.4
+Version: 0.1.6
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 

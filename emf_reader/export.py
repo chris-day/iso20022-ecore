@@ -19,6 +19,9 @@ def _all_features(obj: EObject, name: str):
     attr = getattr(obj.eClass, name, [])
     return attr() if callable(attr) else list(attr)
 
+def _containment_features(obj: EObject):
+    return [ref for ref in _all_features(obj, "eAllReferences") if getattr(ref, "containment", False)]
+
 
 def build_object_graph(roots: Iterable[EObject]) -> Tuple[List[ObjectInfo], List[Dict[str, str | bool]]]:
     seen: Dict[EObject, ObjectInfo] = {}
@@ -34,7 +37,7 @@ def build_object_graph(roots: Iterable[EObject]) -> Tuple[List[ObjectInfo], List
 
     def visit(obj: EObject, path: str) -> None:
         info = ensure(obj, path)
-        for ref in _all_features(obj, "eAllContainments"):
+        for ref in _containment_features(obj):
             value = obj.eGet(ref)
             if value is None:
                 continue
@@ -88,7 +91,10 @@ def _iter_values(value: object) -> List[EObject]:
     if isinstance(value, (list, tuple, set)):
         return [v for v in value if isinstance(v, EObject)]
     if hasattr(value, "__iter__") and not isinstance(value, (str, bytes)):
-        return [v for v in value if isinstance(v, EObject)]
+        try:
+            return [v for v in value if isinstance(v, EObject)]
+        except Exception:  # noqa: BLE001
+            return []
     return []
 
 
@@ -114,7 +120,7 @@ def export_json(roots: Iterable[EObject], output_path: str) -> List[Dict[str, ob
                 attributes[attr.name] = value
 
         containment_ids: List[str] = []
-        for ref in _all_features(obj, "eAllContainments"):
+        for ref in _containment_features(obj):
             value = obj.eGet(ref)
             if value is None:
                 continue
