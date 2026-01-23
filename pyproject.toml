@@ -1,0 +1,27 @@
+[project]
+name = "emf_reader"
+version = "0.1.3"
+description = "Read EMF .ecore metamodels and instance files"
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Codex"}]
+
+dependencies = [
+  "pyecore>=0.13",
+  "lxml>=4.9",
+]
+
+[project.scripts]
+emf-read = "emf_reader.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["emf_reader"]
