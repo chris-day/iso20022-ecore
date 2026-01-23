@@ -128,12 +128,17 @@ def _node_label(obj: EObject) -> str:
 
 
 def _expand_from(
-    objects: List[ObjectInfo], expand_expr: str, expand_depth: int | None
+    objects: List[ObjectInfo],
+    expand_expr: str,
+    expand_depth: int | None,
+    expand_classes: set[str] | None,
 ) -> tuple[List[ObjectInfo], dict[str, int], dict[EObject, str]]:
     predicate = build_predicate(expand_expr)
     obj_map = {info.obj: info for info in objects}
     start: List[EObject] = []
     for info in objects:
+        if expand_classes and info.obj.eClass.name not in expand_classes:
+            continue
         ctx = build_context(info.obj, info.obj_id, info.path)
         if predicate(ctx):
             start.append(info.obj)
@@ -173,6 +178,8 @@ def _expand_from(
                         if not isinstance(target, EObject):
                             continue
                         edges_traversed += 1
+                        if expand_classes and target.eClass.name not in expand_classes:
+                            continue
                         if target not in seen:
                             seen.add(target)
                             next_frontier.append(target)
@@ -182,6 +189,8 @@ def _expand_from(
                 else:
                     target = value if isinstance(value, EObject) else None
                     if target is None:
+                        continue
+                    if expand_classes and target.eClass.name not in expand_classes:
                         continue
                     edges_traversed += 1
                     if target not in seen:
@@ -211,9 +220,12 @@ def _apply_filter(
     filter_expr: str | None,
     expand_expr: str | None,
     expand_depth: int | None,
+    expand_classes: set[str] | None,
 ) -> tuple[List[ObjectInfo], dict[str, int] | None, dict[EObject, str] | None]:
     if expand_expr:
-        filtered, metrics, path_map = _expand_from(objects, expand_expr, expand_depth)
+        filtered, metrics, path_map = _expand_from(
+            objects, expand_expr, expand_depth, expand_classes
+        )
     else:
         filtered = objects
         metrics = None
@@ -237,9 +249,12 @@ def export_json(
     filter_expr: str | None = None,
     expand_expr: str | None = None,
     expand_depth: int | None = None,
+    expand_classes: set[str] | None = None,
 ) -> tuple[List[Dict[str, object]], dict[str, int] | None]:
     objects, edges = build_object_graph(roots)
-    objects, metrics, _ = _apply_filter(objects, filter_expr, expand_expr, expand_depth)
+    objects, metrics, _ = _apply_filter(
+        objects, filter_expr, expand_expr, expand_depth, expand_classes
+    )
     id_map = {info.obj: info.obj_id for info in objects}
 
     entries: List[Dict[str, object]] = []
@@ -297,9 +312,12 @@ def export_edges(
     filter_expr: str | None = None,
     expand_expr: str | None = None,
     expand_depth: int | None = None,
+    expand_classes: set[str] | None = None,
 ) -> tuple[List[Dict[str, str | bool]], dict[str, int] | None]:
     objects, containment_edges = build_object_graph(roots)
-    objects, metrics, _ = _apply_filter(objects, filter_expr, expand_expr, expand_depth)
+    objects, metrics, _ = _apply_filter(
+        objects, filter_expr, expand_expr, expand_depth, expand_classes
+    )
     id_map = {info.obj: info.obj_id for info in objects}
     edges: List[Dict[str, str | bool]] = list(containment_edges)
 
@@ -345,14 +363,17 @@ def export_paths(
     filter_expr: str | None = None,
     expand_expr: str | None = None,
     expand_depth: int | None = None,
+    expand_classes: set[str] | None = None,
 ) -> tuple[List[str], dict[str, int] | None]:
     objects, _ = build_object_graph(roots)
-    objects, metrics, path_map = _apply_filter(objects, filter_expr, expand_expr, expand_depth)
-    if path_map is None:
-        return [], metrics
-    paths = [path_map[info.obj] for info in objects if info.obj in path_map]
-    paths = sorted(set(paths))
+    objects, metrics, path_map = _apply_filter(
+        objects, filter_expr, expand_expr, expand_depth, expand_classes
+    )
     with open(output_path, "w", encoding="utf-8") as handle:
+        if path_map is None:
+            return [], metrics
+        paths = [path_map[info.obj] for info in objects if info.obj in path_map]
+        paths = sorted(set(paths))
         for path in paths:
             handle.write(f"{path}\n")
     return paths, metrics

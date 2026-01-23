@@ -41,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Expansion depth (0=start only, -1=unbounded). Default: 1",
         default=1,
     )
+    parser.add_argument(
+        "--expand-classes",
+        help="Comma-separated EClass names allowed during expansion",
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
     return parser
 
@@ -70,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
         logging.info("Metamodel classes: %s", count_metamodel_classes(packages))
         print(summary)
 
-    if args.dump_instances or args.export_json or args.export_edges:
+    if args.dump_instances or args.export_json or args.export_edges or args.export_paths:
         if not args.instance:
             logging.error("Instance file required for instance operations")
             return 2
@@ -87,6 +91,9 @@ def main(argv: list[str] | None = None) -> int:
 
         roots = list(instance_resource.contents)
         expand_depth = args.expand_depth if args.expand_from else None
+        expand_classes = None
+        if args.expand_classes:
+            expand_classes = {name.strip() for name in args.expand_classes.split(",") if name.strip()}
         if args.export_json:
             try:
                 entries, metrics = export_json(
@@ -95,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
                     filter_expr=args.filter_expr,
                     expand_expr=args.expand_from,
                     expand_depth=expand_depth,
+                    expand_classes=expand_classes,
                 )
             except ValueError as exc:
                 logging.error("Invalid filter expression: %s", exc)
@@ -117,6 +125,7 @@ def main(argv: list[str] | None = None) -> int:
                     filter_expr=args.filter_expr,
                     expand_expr=args.expand_from,
                     expand_depth=expand_depth,
+                    expand_classes=expand_classes,
                 )
             except ValueError as exc:
                 logging.error("Invalid filter expression: %s", exc)
@@ -142,11 +151,15 @@ def main(argv: list[str] | None = None) -> int:
                     filter_expr=args.filter_expr,
                     expand_expr=args.expand_from,
                     expand_depth=expand_depth,
+                    expand_classes=expand_classes,
                 )
             except ValueError as exc:
                 logging.error("Invalid filter expression: %s", exc)
                 return 2
             logging.info("Wrote paths: %s (paths=%s)", args.export_paths, len(paths))
+            if paths:
+                preview = ", ".join(paths[:10])
+                logging.info("Expansion paths preview (max 10): %s", preview)
             if metrics:
                 logging.info(
                     "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
@@ -156,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
                     metrics["loops_detected"],
                     metrics["max_depth"],
                 )
+                if metrics["start_nodes"] == 0:
+                    logging.warning("No expansion start nodes matched the expression")
 
     return 0
 
