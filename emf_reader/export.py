@@ -7,6 +7,8 @@ from typing import Dict, Iterable, List, Tuple
 
 from pyecore.ecore import EObject
 
+from .query import build_context, build_predicate
+
 
 @dataclass
 class ObjectInfo:
@@ -21,6 +23,20 @@ def _all_features(obj: EObject, name: str):
 
 def _containment_features(obj: EObject):
     return [ref for ref in _all_features(obj, "eAllReferences") if getattr(ref, "containment", False)]
+
+def _json_safe(value: object) -> object:
+    if value is None:
+        return None
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    name = getattr(value, "name", None)
+    if name is not None:
+        return name
+    return str(value)
 
 
 def build_object_graph(roots: Iterable[EObject]) -> Tuple[List[ObjectInfo], List[Dict[str, str | bool]]]:
@@ -104,24 +120,129 @@ def _reference_ids(obj: EObject, ref, id_map: Dict[EObject, str]) -> List[str]:
     return [id_map[v] for v in values if v in id_map]
 
 
-def export_json(roots: Iterable[EObject], output_path: str) -> List[Dict[str, object]]:
+def _node_label(obj: EObject) -> str:
+    name = getattr(obj, "name", None)
+    if isinstance(name, str) and name:
+        return name
+    return ""
+
+
+def _expand_from(
+    objects: List[ObjectInfo], expand_expr: str, expand_depth: int | None
+) -> tuple[List[ObjectInfo], dict[str, int], dict[EObject, str]]:
+    predicate = build_predicate(expand_expr)
+    obj_map = {info.obj: info for info in objects}
+    start: List[EObject] = []
+    for info in objects:
+        ctx = build_context(info.obj, info.obj_id, info.path)
+        if predicate(ctx):
+            start.append(info.obj)
+
+    if not start:
+        return (
+            [],
+            {
+            "start_nodes": 0,
+            "nodes_seen": 0,
+            "edges_traversed": 0,
+            "loops_detected": 0,
+            "max_depth": 0,
+            },
+            {},
+        )
+
+    seen: set[EObject] = set(start)
+    frontier: List[EObject] = list(start)
+    path_map: dict[EObject, str] = {obj: f"/{_node_label(obj)}" for obj in start}
+    depth = 0
+    edges_traversed = 0
+    loops_detected = 0
+    while frontier and (expand_depth is None or expand_depth < 0 or depth < expand_depth):
+        next_frontier: List[EObject] = []
+        for obj in frontier:
+            for ref in _all_features(obj, "eAllReferences"):
+                value = obj.eGet(ref)
+                if value is None:
+                    continue
+                if ref.many:
+                    try:
+                        items = list(value)
+                    except Exception:  # noqa: BLE001
+                        items = []
+                    for idx, target in enumerate(items):
+                        if not isinstance(target, EObject):
+                            continue
+                        edges_traversed += 1
+                        if target not in seen:
+                            seen.add(target)
+                            next_frontier.append(target)
+                            path_map[target] = f"{path_map[obj]}/{_node_label(target)}"
+                        else:
+                            loops_detected += 1
+                else:
+                    target = value if isinstance(value, EObject) else None
+                    if target is None:
+                        continue
+                    edges_traversed += 1
+                    if target not in seen:
+                        seen.add(target)
+                        next_frontier.append(target)
+                        path_map[target] = f"{path_map[obj]}/{_node_label(target)}"
+                    else:
+                        loops_detected += 1
+        frontier = next_frontier
+        depth += 1
+
+    return (
+        [obj_map[obj] for obj in seen if obj in obj_map],
+        {
+            "start_nodes": len(start),
+            "nodes_seen": len(seen),
+            "edges_traversed": edges_traversed,
+            "loops_detected": loops_detected,
+            "max_depth": depth,
+        },
+        path_map,
+    )
+
+
+def _apply_filter(
+    objects: List[ObjectInfo],
+    filter_expr: str | None,
+    expand_expr: str | None,
+    expand_depth: int | None,
+) -> tuple[List[ObjectInfo], dict[str, int] | None, dict[EObject, str] | None]:
+    if expand_expr:
+        filtered, metrics, path_map = _expand_from(objects, expand_expr, expand_depth)
+    else:
+        filtered = objects
+        metrics = None
+        path_map = None
+    if not filter_expr:
+        return filtered, metrics, path_map
+    predicate = build_predicate(filter_expr)
+    result: List[ObjectInfo] = []
+    for info in filtered:
+        ctx = build_context(info.obj, info.obj_id, info.path)
+        if predicate(ctx):
+            result.append(info)
+    if path_map is not None:
+        path_map = {info.obj: path_map[info.obj] for info in result if info.obj in path_map}
+    return result, metrics, path_map
+
+
+def export_json(
+    roots: Iterable[EObject],
+    output_path: str,
+    filter_expr: str | None = None,
+    expand_expr: str | None = None,
+    expand_depth: int | None = None,
+) -> tuple[List[Dict[str, object]], dict[str, int] | None]:
     objects, edges = build_object_graph(roots)
+    objects, metrics, _ = _apply_filter(objects, filter_expr, expand_expr, expand_depth)
     id_map = {info.obj: info.obj_id for info in objects}
 
     entries: List[Dict[str, object]] = []
-    def _json_safe(value: object) -> object:
-        if value is None:
-            return None
-        if isinstance(value, (str, int, float, bool)):
-            return value
-        if isinstance(value, bytes):
-            return value.decode("utf-8", errors="replace")
-        if isinstance(value, list):
-            return [_json_safe(v) for v in value]
-        name = getattr(value, "name", None)
-        if name is not None:
-            return name
-        return str(value)
 
     for info in objects:
         obj = info.obj
@@ -167,11 +288,18 @@ def export_json(roots: Iterable[EObject], output_path: str) -> List[Dict[str, ob
     with open(output_path, "w", encoding="utf-8") as handle:
         json.dump(entries, handle, indent=2)
 
-    return entries
+    return entries, metrics
 
 
-def export_edges(roots: Iterable[EObject], output_path: str) -> List[Dict[str, str | bool]]:
+def export_edges(
+    roots: Iterable[EObject],
+    output_path: str,
+    filter_expr: str | None = None,
+    expand_expr: str | None = None,
+    expand_depth: int | None = None,
+) -> tuple[List[Dict[str, str | bool]], dict[str, int] | None]:
     objects, containment_edges = build_object_graph(roots)
+    objects, metrics, _ = _apply_filter(objects, filter_expr, expand_expr, expand_depth)
     id_map = {info.obj: info.obj_id for info in objects}
     edges: List[Dict[str, str | bool]] = list(containment_edges)
 
@@ -197,6 +325,9 @@ def export_edges(roots: Iterable[EObject], output_path: str) -> List[Dict[str, s
                     }
                 )
 
+    id_set = set(id_map.values())
+    edges = [edge for edge in edges if edge["src_id"] in id_set and edge["dst_id"] in id_set]
+
     with open(output_path, "w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
             handle,
@@ -205,4 +336,23 @@ def export_edges(roots: Iterable[EObject], output_path: str) -> List[Dict[str, s
         writer.writeheader()
         writer.writerows(edges)
 
-    return edges
+    return edges, metrics
+
+
+def export_paths(
+    roots: Iterable[EObject],
+    output_path: str,
+    filter_expr: str | None = None,
+    expand_expr: str | None = None,
+    expand_depth: int | None = None,
+) -> tuple[List[str], dict[str, int] | None]:
+    objects, _ = build_object_graph(roots)
+    objects, metrics, path_map = _apply_filter(objects, filter_expr, expand_expr, expand_depth)
+    if path_map is None:
+        return [], metrics
+    paths = [path_map[info.obj] for info in objects if info.obj in path_map]
+    paths = sorted(set(paths))
+    with open(output_path, "w", encoding="utf-8") as handle:
+        for path in paths:
+            handle.write(f"{path}\n")
+    return paths, metrics

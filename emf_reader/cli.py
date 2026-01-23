@@ -4,7 +4,7 @@ import argparse
 import logging
 import sys
 
-from .export import export_edges, export_json
+from .export import export_edges, export_json, export_paths
 from .loader import (
     count_metamodel_classes,
     instance_stats,
@@ -29,6 +29,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dump-instances", action="store_true", help="Print instance summary")
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
     parser.add_argument("--export-edges", help="Export edges to CSV")
+    parser.add_argument("--export-paths", help="Export expansion paths to text")
+    parser.add_argument("--filter-expr", help="Filter expression for exported objects")
+    parser.add_argument(
+        "--expand-from",
+        help="Expansion start expression (adds reachable objects via references)",
+    )
+    parser.add_argument(
+        "--expand-depth",
+        type=int,
+        help="Expansion depth (0=start only, -1=unbounded). Default: 1",
+        default=1,
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
     return parser
 
@@ -37,6 +49,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     _configure_logging(args.verbose)
+    logging.info("Args: %s", vars(args))
 
     try:
         rset, packages = load_metamodel(args.ecore)
@@ -73,12 +86,76 @@ def main(argv: list[str] | None = None) -> int:
             print(summarize_instances([instance_resource]))
 
         roots = list(instance_resource.contents)
+        expand_depth = args.expand_depth if args.expand_from else None
         if args.export_json:
-            export_json(roots, args.export_json)
-            logging.info("Wrote JSON: %s", args.export_json)
+            try:
+                entries, metrics = export_json(
+                    roots,
+                    args.export_json,
+                    filter_expr=args.filter_expr,
+                    expand_expr=args.expand_from,
+                    expand_depth=expand_depth,
+                )
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            logging.info("Wrote JSON: %s (objects=%s)", args.export_json, len(entries))
+            if metrics:
+                logging.info(
+                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                    metrics["start_nodes"],
+                    metrics["nodes_seen"],
+                    metrics["edges_traversed"],
+                    metrics["loops_detected"],
+                    metrics["max_depth"],
+                )
         if args.export_edges:
-            export_edges(roots, args.export_edges)
-            logging.info("Wrote edges: %s", args.export_edges)
+            try:
+                edges, metrics = export_edges(
+                    roots,
+                    args.export_edges,
+                    filter_expr=args.filter_expr,
+                    expand_expr=args.expand_from,
+                    expand_depth=expand_depth,
+                )
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            logging.info("Wrote edges: %s (edges=%s)", args.export_edges, len(edges))
+            if metrics:
+                logging.info(
+                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                    metrics["start_nodes"],
+                    metrics["nodes_seen"],
+                    metrics["edges_traversed"],
+                    metrics["loops_detected"],
+                    metrics["max_depth"],
+                )
+        if args.export_paths:
+            if not args.expand_from:
+                logging.error("export-paths requires --expand-from")
+                return 2
+            try:
+                paths, metrics = export_paths(
+                    roots,
+                    args.export_paths,
+                    filter_expr=args.filter_expr,
+                    expand_expr=args.expand_from,
+                    expand_depth=expand_depth,
+                )
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            logging.info("Wrote paths: %s (paths=%s)", args.export_paths, len(paths))
+            if metrics:
+                logging.info(
+                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                    metrics["start_nodes"],
+                    metrics["nodes_seen"],
+                    metrics["edges_traversed"],
+                    metrics["loops_detected"],
+                    metrics["max_depth"],
+                )
 
     return 0
 

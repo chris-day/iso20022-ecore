@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.7
+Version: 0.1.16
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -16,7 +16,8 @@ python -m pip install -e .
 
 ```bash
 emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-instances] \
-  [--export-json <path>] [--export-edges <path>] [--verbose]
+  [--export-json <path>] [--export-edges <path>] [--export-paths <path>] \
+  [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] [--verbose]
 ```
 
 ### Examples
@@ -43,6 +44,69 @@ Verbose logging:
 ```bash
 emf-read --ecore /var/software/input/ISO20022.ecore --dump-metamodel --verbose
 ```
+
+Filter exports with a tiny expression language:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --filter-expr "eclass == 'BusinessComponent' and registrationStatus == 'REGISTERED'" \
+  --export-json /tmp/business_components.json \
+  --export-edges /tmp/business_components_edges.csv
+```
+
+Expand the graph from a matching start node (depth 2):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --expand-from "eclass == 'BusinessComponent' and name == 'Account'" \
+  --expand-depth 2 \
+  --export-json /tmp/account_graph.json \
+  --export-edges /tmp/account_graph_edges.csv
+```
+
+Write expansion paths (XPath-like, name-only) to a text file:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --expand-from "eclass == 'BusinessComponent' and name == 'Account'" \
+  --expand-depth 2 \
+  --export-paths /tmp/account_paths.txt
+```
+
+Combine filter and expansion (expand first, then filter results):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --expand-from "eclass == 'BusinessComponent' and name == 'Account'" \
+  --expand-depth 3 \
+  --filter-expr "eclass == 'BusinessRole'" \
+  --export-json /tmp/account_roles.json
+```
+
+Unbounded expansion (use with care on large models):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --expand-from "eclass == 'BusinessComponent' and name == 'Account'" \
+  --expand-depth -1 \
+  --export-edges /tmp/account_all_edges.csv
+```
+
+Filter expression variables:
+
+- `eclass`, `nsuri`, `id`, `path`
+- `attrs` (dict of attribute values)
+- attribute names as direct variables (e.g., `name`, `registrationStatus`)
 
 ## Output formats
 
