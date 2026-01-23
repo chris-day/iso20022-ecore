@@ -109,15 +109,29 @@ def export_json(roots: Iterable[EObject], output_path: str) -> List[Dict[str, ob
     id_map = {info.obj: info.obj_id for info in objects}
 
     entries: List[Dict[str, object]] = []
+    def _json_safe(value: object) -> object:
+        if value is None:
+            return None
+        if isinstance(value, (str, int, float, bool)):
+            return value
+        if isinstance(value, bytes):
+            return value.decode("utf-8", errors="replace")
+        if isinstance(value, list):
+            return [_json_safe(v) for v in value]
+        name = getattr(value, "name", None)
+        if name is not None:
+            return name
+        return str(value)
+
     for info in objects:
         obj = info.obj
         attributes: Dict[str, object] = {}
         for attr in _all_features(obj, "eAllAttributes"):
             value = obj.eGet(attr)
             if attr.many:
-                attributes[attr.name] = list(value) if value is not None else []
+                attributes[attr.name] = _json_safe(list(value)) if value is not None else []
             else:
-                attributes[attr.name] = value
+                attributes[attr.name] = _json_safe(value)
 
         containment_ids: List[str] = []
         for ref in _containment_features(obj):
