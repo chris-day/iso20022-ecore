@@ -4,7 +4,7 @@ import argparse
 import logging
 import sys
 
-from .export import export_edges, export_json, export_paths
+from .export import export_edges, export_json, export_paths, export_path_ids
 from .loader import (
     count_metamodel_classes,
     instance_stats,
@@ -30,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
     parser.add_argument("--export-edges", help="Export edges to CSV")
     parser.add_argument("--export-paths", help="Export expansion paths to text")
+    parser.add_argument("--export-path-ids", help="Export expansion path IDs to text")
     parser.add_argument("--filter-expr", help="Filter expression for exported objects")
     parser.add_argument(
         "--expand-from",
@@ -74,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
         logging.info("Metamodel classes: %s", count_metamodel_classes(packages))
         print(summary)
 
-    if args.dump_instances or args.export_json or args.export_edges or args.export_paths:
+    if args.dump_instances or args.export_json or args.export_edges or args.export_paths or args.export_path_ids:
         if not args.instance:
             logging.error("Instance file required for instance operations")
             return 2
@@ -160,6 +161,37 @@ def main(argv: list[str] | None = None) -> int:
             if paths:
                 preview = ", ".join(paths[:10])
                 logging.info("Expansion paths preview (max 10): %s", preview)
+            if metrics:
+                logging.info(
+                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                    metrics["start_nodes"],
+                    metrics["nodes_seen"],
+                    metrics["edges_traversed"],
+                    metrics["loops_detected"],
+                    metrics["max_depth"],
+                )
+                if metrics["start_nodes"] == 0:
+                    logging.warning("No expansion start nodes matched the expression")
+        if args.export_path_ids:
+            if not args.expand_from:
+                logging.error("export-path-ids requires --expand-from")
+                return 2
+            try:
+                pairs, metrics = export_path_ids(
+                    roots,
+                    args.export_path_ids,
+                    filter_expr=args.filter_expr,
+                    expand_expr=args.expand_from,
+                    expand_depth=expand_depth,
+                    expand_classes=expand_classes,
+                )
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            logging.info("Wrote path IDs: %s (rows=%s)", args.export_path_ids, len(pairs))
+            if pairs:
+                preview = ", ".join([f"/{pid}" for pid, _ in pairs[:10]])
+                logging.info("Path IDs preview (max 10): %s", preview)
             if metrics:
                 logging.info(
                     "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",

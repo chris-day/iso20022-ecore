@@ -377,3 +377,26 @@ def export_paths(
         for path in paths:
             handle.write(f"{path}\n")
     return paths, metrics
+
+
+def export_path_ids(
+    roots: Iterable[EObject],
+    output_path: str,
+    filter_expr: str | None = None,
+    expand_expr: str | None = None,
+    expand_depth: int | None = None,
+    expand_classes: set[str] | None = None,
+) -> tuple[List[tuple[str, str]], dict[str, int] | None]:
+    objects, _ = build_object_graph(roots)
+    objects, metrics, path_map = _apply_filter(
+        objects, filter_expr, expand_expr, expand_depth, expand_classes
+    )
+    with open(output_path, "w", encoding="utf-8") as handle:
+        if path_map is None:
+            return [], metrics
+        pairs = [(info.obj_id, path_map[info.obj]) for info in objects if info.obj in path_map]
+        pairs = sorted(set(pairs))
+        id_paths = [f"/{obj_id}" for obj_id, _ in pairs]
+        for id_path in id_paths:
+            handle.write(f"{id_path}\n")
+    return pairs, metrics

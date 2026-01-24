@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.20
+Version: 0.1.23
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -16,7 +16,7 @@ python -m pip install -e .
 
 ```bash
 emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-instances] \
-  [--export-json <path>] [--export-edges <path>] [--export-paths <path>] \
+  [--export-json <path>] [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
 ```
@@ -78,6 +78,17 @@ emf-read \
   --expand-from "eclass == 'BusinessComponent' and name == 'Account'" \
   --expand-depth 2 \
   --export-paths /tmp/account_paths.txt
+```
+
+Write expansion path IDs (id-only paths):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --expand-from "eclass == 'BusinessComponent' and name == 'Account'" \
+  --expand-depth 2 \
+  --export-path-ids /tmp/account_path_ids.txt
 ```
 
 Restrict expansion to specific classes:

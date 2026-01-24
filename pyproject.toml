@@ -1,6 +1,6 @@
 [project]
 name = "emf_reader"
-version = "0.1.20"
+version = "0.1.23"
 description = "Read EMF .ecore metamodels and instance files"
 requires-python = ">=3.11"
 readme = "README.md"
