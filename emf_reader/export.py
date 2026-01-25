@@ -133,6 +133,10 @@ def _id_label(obj: EObject, fallback: str) -> str:
     return fallback
 
 
+def _preferred_id(obj: EObject, fallback: str) -> str:
+    return _id_label(obj, fallback)
+
+
 def _expand_from(
     objects: List[ObjectInfo],
     expand_expr: str,
@@ -283,7 +287,7 @@ def export_json(
     objects, metrics, _, _ = _apply_filter(
         objects, filter_expr, expand_expr, expand_depth, expand_classes
     )
-    id_map = {info.obj: info.obj_id for info in objects}
+    id_map = {info.obj: _preferred_id(info.obj, info.obj_id) for info in objects}
 
     entries: List[Dict[str, object]] = []
 
@@ -318,7 +322,8 @@ def export_json(
 
         entries.append(
             {
-                "id": info.obj_id,
+                "id": _preferred_id(obj, info.obj_id),
+                "local_id": info.obj_id,
                 "ID": _id_label(obj, info.obj_id),
                 "eClass": obj.eClass.name,
                 "nsURI": obj.eClass.ePackage.nsURI if obj.eClass.ePackage else None,
@@ -347,8 +352,20 @@ def export_edges(
     objects, metrics, _, _ = _apply_filter(
         objects, filter_expr, expand_expr, expand_depth, expand_classes
     )
-    id_map = {info.obj: info.obj_id for info in objects}
+    id_map = {info.obj: _preferred_id(info.obj, info.obj_id) for info in objects}
+    local_to_preferred = {info.obj_id: id_map[info.obj] for info in objects}
     edges: List[Dict[str, str | bool]] = list(containment_edges)
+    remapped_edges: List[Dict[str, str | bool]] = []
+    for edge in edges:
+        src = local_to_preferred.get(edge["src_id"])
+        dst = local_to_preferred.get(edge["dst_id"])
+        if not src or not dst:
+            continue
+        remapped = dict(edge)
+        remapped["src_id"] = src
+        remapped["dst_id"] = dst
+        remapped_edges.append(remapped)
+    edges = remapped_edges
 
     for info in objects:
         obj = info.obj
@@ -505,7 +522,7 @@ def dump_instances_by_class(
     roots: Iterable[EObject], filter_expr: str | None = None
 ) -> dict[str, object]:
     objects, _ = build_object_graph(roots)
-    id_map = {info.obj: info.obj_id for info in objects}
+    id_map = {info.obj: _preferred_id(info.obj, info.obj_id) for info in objects}
     classes: dict[str, list[dict[str, object]]] = {}
     predicate = build_predicate(filter_expr) if filter_expr else None
     for info in objects:
@@ -516,7 +533,8 @@ def dump_instances_by_class(
         obj = info.obj
         cls_name = obj.eClass.name
         entry: dict[str, object] = {
-            "id": info.obj_id,
+            "id": _preferred_id(obj, info.obj_id),
+            "local_id": info.obj_id,
             "ID": _id_label(obj, info.obj_id),
             "eClass": cls_name,
             "nsURI": obj.eClass.ePackage.nsURI if obj.eClass.ePackage else None,
@@ -551,3 +569,102 @@ def dump_instances_by_class(
         "total_objects": len(objects),
         "classes": classes,
     }
+
+
+def export_mermaid(
+    roots: Iterable[EObject],
+    output_path: str,
+    filter_expr: str | None = None,
+) -> dict[str, int]:
+    objects, _ = build_object_graph(roots)
+    predicate = build_predicate(filter_expr) if filter_expr else None
+    filtered = []
+    for info in objects:
+        if predicate:
+            ctx = build_context(info.obj, info.obj_id, info.path)
+            if not predicate(ctx):
+                continue
+        filtered.append(info)
+
+    lines = ["graph TD"]
+    id_map = {info.obj: _preferred_id(info.obj, info.obj_id) for info in filtered}
+    node_count = 0
+    edge_count = 0
+    filtered_objs = {info.obj for info in filtered}
+
+    def node_label(obj: EObject) -> str:
+        name = getattr(obj, "name", None)
+        return name if isinstance(name, str) and name else obj.eClass.name
+
+    for info in filtered:
+        node_id = id_map[info.obj].replace("-", "_")
+        label = node_label(info.obj).replace("\"", "'")
+        lines.append(f"  {node_id}[\"{label}\"]")
+        node_count += 1
+
+    for info in filtered:
+        src_id = id_map[info.obj].replace("-", "_")
+        for ref in _all_features(info.obj, "eAllReferences"):
+            value = info.obj.eGet(ref)
+            for target in _iter_values(value):
+                if target not in filtered_objs:
+                    continue
+                dst_id = id_map[target].replace("-", "_")
+                lines.append(f"  {src_id} --> {dst_id}")
+                edge_count += 1
+
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+        handle.write("\n")
+
+    return {"nodes": node_count, "edges": edge_count}
+
+
+def export_plantuml(
+    roots: Iterable[EObject],
+    output_path: str,
+    filter_expr: str | None = None,
+) -> dict[str, int]:
+    objects, _ = build_object_graph(roots)
+    predicate = build_predicate(filter_expr) if filter_expr else None
+    filtered = []
+    for info in objects:
+        if predicate:
+            ctx = build_context(info.obj, info.obj_id, info.path)
+            if not predicate(ctx):
+                continue
+        filtered.append(info)
+
+    lines = ["@startuml"]
+    id_map = {info.obj: _preferred_id(info.obj, info.obj_id) for info in filtered}
+    node_count = 0
+    edge_count = 0
+    filtered_objs = {info.obj for info in filtered}
+
+    def node_label(obj: EObject) -> str:
+        name = getattr(obj, "name", None)
+        return name if isinstance(name, str) and name else obj.eClass.name
+
+    for info in filtered:
+        node_id = id_map[info.obj].replace("-", "_")
+        label = node_label(info.obj).replace("\"", "'")
+        lines.append(f'class "{label}" as {node_id}')
+        node_count += 1
+
+    for info in filtered:
+        src_id = id_map[info.obj].replace("-", "_")
+        for ref in _all_features(info.obj, "eAllReferences"):
+            value = info.obj.eGet(ref)
+            for target in _iter_values(value):
+                if target not in filtered_objs:
+                    continue
+                dst_id = id_map[target].replace("-", "_")
+                lines.append(f"{src_id} --> {dst_id}")
+                edge_count += 1
+
+    lines.append("@enduml")
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+        handle.write("\n")
+
+    return {"nodes": node_count, "edges": edge_count}

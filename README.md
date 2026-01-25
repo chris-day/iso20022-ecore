@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.32
+Version: 0.1.39
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -19,6 +19,7 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--dump-instances] [--dump-instances-json <path>] [--dump-instances-filter <expr>] \
   [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
+  [--export-mermaid <path>] [--export-plantuml <path>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
 ```
@@ -150,6 +151,26 @@ emf-read \
   --dump-instances-filter "eclass == 'BusinessComponent' and name == 'Account'"
 ```
 
+Export a Mermaid diagram for BusinessComponent instances (labelled by name):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --filter-expr "eclass == 'BusinessComponent'" \
+  --export-mermaid /tmp/business_components.mmd
+```
+
+Export a PlantUML class diagram for BusinessComponent instances (labelled by name):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --filter-expr "eclass == 'BusinessComponent'" \
+  --export-plantuml /tmp/business_components.puml
+```
+
 Model JSON includes per-class attribute/reference definitions with target type, cardinality, and containment.
 
 Combine filter and expansion (expand first, then filter results):
@@ -177,7 +198,7 @@ emf-read \
 
 Filter expression variables:
 
-- `eclass`, `nsuri`, `id`, `ID`, `path`
+- `eclass`, `nsuri`, `id`, `ID`, `local_id`, `path`
 - `attrs` (dict of attribute values)
 - attribute names as direct variables (e.g., `name`, `registrationStatus`)
 
@@ -186,7 +207,9 @@ Filter expression variables:
 ### JSON export
 A list of objects with:
 
-- `id`: stable id per run (based on traversal order)
+- `id`: XMI id if present, otherwise stable id per run (based on traversal order)
+- `local_id`: stable id per run (always present)
+- `ID`: XMI id if present, otherwise `local_id`
 - `eClass`: class name
 - `nsURI`: package nsURI
 - `attributes`: scalar or list attribute values

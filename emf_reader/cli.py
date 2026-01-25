@@ -6,13 +6,15 @@ import logging
 import sys
 
 from .export import (
+    dump_instances_by_class,
     export_edges,
     export_json,
-    export_paths,
+    export_mermaid,
     export_path_ids,
-    summarize_model,
+    export_paths,
+    export_plantuml,
     model_dump,
-    dump_instances_by_class,
+    summarize_model,
 )
 from .loader import (
     count_metamodel_classes,
@@ -42,6 +44,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dump-instances", action="store_true", help="Print instance summary")
     parser.add_argument("--dump-instances-json", help="Write instances grouped by class to JSON")
     parser.add_argument("--dump-instances-filter", help="Filter expression for instance JSON dump")
+    parser.add_argument("--export-mermaid", help="Export filtered instance graph to Mermaid")
+    parser.add_argument("--export-plantuml", help="Export filtered instance graph to PlantUML")
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
     parser.add_argument("--export-edges", help="Export edges to CSV")
     parser.add_argument("--export-paths", help="Export expansion paths to text")
@@ -104,6 +108,8 @@ def main(argv: list[str] | None = None) -> int:
         or args.export_edges
         or args.export_paths
         or args.export_path_ids
+        or args.export_mermaid
+        or args.export_plantuml
     ):
         if not args.instance:
             logging.error("Instance file required for instance operations")
@@ -135,6 +141,30 @@ def main(argv: list[str] | None = None) -> int:
             with open(args.dump_instances_json, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
             logging.info("Wrote instances JSON: %s", args.dump_instances_json)
+        if args.export_mermaid:
+            try:
+                stats = export_mermaid(roots, args.export_mermaid, filter_expr=args.filter_expr)
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            logging.info(
+                "Wrote Mermaid: %s (nodes=%s edges=%s)",
+                args.export_mermaid,
+                stats["nodes"],
+                stats["edges"],
+            )
+        if args.export_plantuml:
+            try:
+                stats = export_plantuml(roots, args.export_plantuml, filter_expr=args.filter_expr)
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            logging.info(
+                "Wrote PlantUML: %s (nodes=%s edges=%s)",
+                args.export_plantuml,
+                stats["nodes"],
+                stats["edges"],
+            )
         expand_depth = args.expand_depth if args.expand_from else None
         expand_classes = None
         if args.expand_classes:

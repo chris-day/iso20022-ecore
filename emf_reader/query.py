@@ -71,11 +71,14 @@ def build_context(obj: EObject, obj_id: str, path: str) -> Dict[str, Any]:
             attrs[attr.name] = _json_safe(list(value)) if value is not None else []
         else:
             attrs[attr.name] = _json_safe(value)
+    internal_id = getattr(obj, "_internal_id", None)
+    preferred_id = internal_id if isinstance(internal_id, str) and internal_id else obj_id
     ctx: Dict[str, Any] = {
         "eclass": obj.eClass.name,
         "nsuri": obj.eClass.ePackage.nsURI if obj.eClass.ePackage else None,
-        "id": obj_id,
-        "ID": getattr(obj, "_internal_id", None) or obj_id,
+        "id": preferred_id,
+        "local_id": obj_id,
+        "ID": preferred_id,
         "path": path,
         "attrs": attrs,
     }
