@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
 
-from .export import export_edges, export_json, export_paths, export_path_ids
+from .export import export_edges, export_json, export_paths, export_path_ids, summarize_model, model_dump
 from .loader import (
     count_metamodel_classes,
     instance_stats,
     load_instance,
     load_metamodel,
+    metamodel_dump,
     metamodel_stats,
     summarize_instances,
     summarize_metamodel,
@@ -26,6 +28,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ecore", required=True, help="Path to .ecore file")
     parser.add_argument("--instance", help="Path to instance file (.xmi/.xml/.iso20022)")
     parser.add_argument("--dump-metamodel", action="store_true", help="Print metamodel summary")
+    parser.add_argument("--dump-metamodel-json", help="Write metamodel summary to JSON")
+    parser.add_argument("--dump-model", action="store_true", help="Print model summary")
+    parser.add_argument("--dump-model-json", help="Write model summary to JSON")
     parser.add_argument("--dump-instances", action="store_true", help="Print instance summary")
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
     parser.add_argument("--export-edges", help="Export edges to CSV")
@@ -74,8 +79,21 @@ def main(argv: list[str] | None = None) -> int:
         summary = summarize_metamodel(packages)
         logging.info("Metamodel classes: %s", count_metamodel_classes(packages))
         print(summary)
+    if args.dump_metamodel_json:
+        payload = metamodel_dump(packages)
+        with open(args.dump_metamodel_json, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+        logging.info("Wrote metamodel JSON: %s", args.dump_metamodel_json)
 
-    if args.dump_instances or args.export_json or args.export_edges or args.export_paths or args.export_path_ids:
+    if (
+        args.dump_instances
+        or args.dump_model
+        or args.dump_model_json
+        or args.export_json
+        or args.export_edges
+        or args.export_paths
+        or args.export_path_ids
+    ):
         if not args.instance:
             logging.error("Instance file required for instance operations")
             return 2
@@ -87,10 +105,16 @@ def main(argv: list[str] | None = None) -> int:
         instats = instance_stats([instance_resource])
         logging.info("Instance stats: roots=%s", instats["roots"])
 
+        roots = list(instance_resource.contents)
         if args.dump_instances:
             print(summarize_instances([instance_resource]))
-
-        roots = list(instance_resource.contents)
+        if args.dump_model:
+            print(summarize_model(roots))
+        if args.dump_model_json:
+            payload = model_dump(roots)
+            with open(args.dump_model_json, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle, indent=2)
+            logging.info("Wrote model JSON: %s", args.dump_model_json)
         expand_depth = args.expand_depth if args.expand_from else None
         expand_classes = None
         if args.expand_classes:
@@ -190,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             logging.info("Wrote path IDs: %s (rows=%s)", args.export_path_ids, len(pairs))
             if pairs:
-                preview = ", ".join([f"/{pid}" for pid, _ in pairs[:10]])
+                preview = ", ".join([path for _, path in pairs[:10]])
                 logging.info("Path IDs preview (max 10): %s", preview)
             if metrics:
                 logging.info(

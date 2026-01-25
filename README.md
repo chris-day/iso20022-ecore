@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.23
+Version: 0.1.30
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -15,8 +15,9 @@ python -m pip install -e .
 ### Usage
 
 ```bash
-emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-instances] \
-  [--export-json <path>] [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
+emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel-json <path>] \
+  [--dump-instances] [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
+  [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
 ```
@@ -28,6 +29,14 @@ Dump metamodel summary (no instance required):
 ```bash
 emf-read --ecore /var/software/input/ISO20022.ecore --dump-metamodel
 ```
+
+Dump metamodel to JSON:
+
+```bash
+emf-read --ecore /var/software/input/ISO20022.ecore --dump-metamodel-json /tmp/metamodel.json
+```
+
+Metamodel JSON includes package hierarchy (`subpackages`) and class references with target type, cardinality, and containment.
 
 Load instance, dump summary, and export JSON/edges:
 
@@ -80,7 +89,7 @@ emf-read \
   --export-paths /tmp/account_paths.txt
 ```
 
-Write expansion path IDs (id-only paths):
+Write expansion path IDs (id-only paths that mirror expansion):
 
 ```bash
 emf-read \
@@ -102,6 +111,26 @@ emf-read \
   --expand-classes BusinessAssociationEnd,BusinessAttribute,BusinessComponent \
   --export-paths /tmp/account_paths_limited.txt
 ```
+
+Dump model summary (object counts by class):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --dump-model
+```
+
+Dump model summary to JSON:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --dump-model-json /tmp/model.json
+```
+
+Model JSON includes per-class attribute/reference definitions with target type, cardinality, and containment.
 
 Combine filter and expansion (expand first, then filter results):
 
@@ -128,7 +157,7 @@ emf-read \
 
 Filter expression variables:
 
-- `eclass`, `nsuri`, `id`, `path`
+- `eclass`, `nsuri`, `id`, `ID`, `path`
 - `attrs` (dict of attribute values)
 - attribute names as direct variables (e.g., `name`, `registrationStatus`)
 

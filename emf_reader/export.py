@@ -126,15 +126,22 @@ def _node_label(obj: EObject) -> str:
         return name
     return ""
 
+def _id_label(obj: EObject, fallback: str) -> str:
+    value = getattr(obj, "_internal_id", None)
+    if isinstance(value, str) and value:
+        return value
+    return fallback
+
 
 def _expand_from(
     objects: List[ObjectInfo],
     expand_expr: str,
     expand_depth: int | None,
     expand_classes: set[str] | None,
-) -> tuple[List[ObjectInfo], dict[str, int], dict[EObject, str]]:
+) -> tuple[List[ObjectInfo], dict[str, int], dict[EObject, str], dict[EObject, str]]:
     predicate = build_predicate(expand_expr)
     obj_map = {info.obj: info for info in objects}
+    id_map = {info.obj: info.obj_id for info in objects}
     start: List[EObject] = []
     for info in objects:
         if expand_classes and info.obj.eClass.name not in expand_classes:
@@ -154,11 +161,15 @@ def _expand_from(
             "max_depth": 0,
             },
             {},
+            {},
         )
 
     seen: set[EObject] = set(start)
     frontier: List[EObject] = list(start)
     path_map: dict[EObject, str] = {obj: f"/{_node_label(obj)}" for obj in start}
+    id_path_map: dict[EObject, str] = {
+        obj: f"/{_id_label(obj, id_map[obj])}" for obj in start if obj in id_map
+    }
     depth = 0
     edges_traversed = 0
     loops_detected = 0
@@ -184,6 +195,9 @@ def _expand_from(
                             seen.add(target)
                             next_frontier.append(target)
                             path_map[target] = f"{path_map[obj]}/{_node_label(target)}"
+                            id_path_map[target] = (
+                                f"{id_path_map.get(obj, '')}/{_id_label(target, id_map[target])}"
+                            )
                         else:
                             loops_detected += 1
                 else:
@@ -197,6 +211,9 @@ def _expand_from(
                         seen.add(target)
                         next_frontier.append(target)
                         path_map[target] = f"{path_map[obj]}/{_node_label(target)}"
+                        id_path_map[target] = (
+                            f"{id_path_map.get(obj, '')}/{_id_label(target, id_map[target])}"
+                        )
                     else:
                         loops_detected += 1
         frontier = next_frontier
@@ -212,6 +229,7 @@ def _expand_from(
             "max_depth": depth,
         },
         path_map,
+        id_path_map,
     )
 
 
@@ -221,17 +239,23 @@ def _apply_filter(
     expand_expr: str | None,
     expand_depth: int | None,
     expand_classes: set[str] | None,
-) -> tuple[List[ObjectInfo], dict[str, int] | None, dict[EObject, str] | None]:
+) -> tuple[
+    List[ObjectInfo],
+    dict[str, int] | None,
+    dict[EObject, str] | None,
+    dict[EObject, str] | None,
+]:
     if expand_expr:
-        filtered, metrics, path_map = _expand_from(
+        filtered, metrics, path_map, id_path_map = _expand_from(
             objects, expand_expr, expand_depth, expand_classes
         )
     else:
         filtered = objects
         metrics = None
         path_map = None
+        id_path_map = None
     if not filter_expr:
-        return filtered, metrics, path_map
+        return filtered, metrics, path_map, id_path_map
     predicate = build_predicate(filter_expr)
     result: List[ObjectInfo] = []
     for info in filtered:
@@ -240,7 +264,11 @@ def _apply_filter(
             result.append(info)
     if path_map is not None:
         path_map = {info.obj: path_map[info.obj] for info in result if info.obj in path_map}
-    return result, metrics, path_map
+    if id_path_map is not None:
+        id_path_map = {
+            info.obj: id_path_map[info.obj] for info in result if info.obj in id_path_map
+        }
+    return result, metrics, path_map, id_path_map
 
 
 def export_json(
@@ -252,7 +280,7 @@ def export_json(
     expand_classes: set[str] | None = None,
 ) -> tuple[List[Dict[str, object]], dict[str, int] | None]:
     objects, edges = build_object_graph(roots)
-    objects, metrics, _ = _apply_filter(
+    objects, metrics, _, _ = _apply_filter(
         objects, filter_expr, expand_expr, expand_depth, expand_classes
     )
     id_map = {info.obj: info.obj_id for info in objects}
@@ -291,6 +319,7 @@ def export_json(
         entries.append(
             {
                 "id": info.obj_id,
+                "ID": _id_label(obj, info.obj_id),
                 "eClass": obj.eClass.name,
                 "nsURI": obj.eClass.ePackage.nsURI if obj.eClass.ePackage else None,
                 "attributes": attributes,
@@ -315,7 +344,7 @@ def export_edges(
     expand_classes: set[str] | None = None,
 ) -> tuple[List[Dict[str, str | bool]], dict[str, int] | None]:
     objects, containment_edges = build_object_graph(roots)
-    objects, metrics, _ = _apply_filter(
+    objects, metrics, _, _ = _apply_filter(
         objects, filter_expr, expand_expr, expand_depth, expand_classes
     )
     id_map = {info.obj: info.obj_id for info in objects}
@@ -366,7 +395,7 @@ def export_paths(
     expand_classes: set[str] | None = None,
 ) -> tuple[List[str], dict[str, int] | None]:
     objects, _ = build_object_graph(roots)
-    objects, metrics, path_map = _apply_filter(
+    objects, metrics, path_map, _ = _apply_filter(
         objects, filter_expr, expand_expr, expand_depth, expand_classes
     )
     with open(output_path, "w", encoding="utf-8") as handle:
@@ -388,15 +417,85 @@ def export_path_ids(
     expand_classes: set[str] | None = None,
 ) -> tuple[List[tuple[str, str]], dict[str, int] | None]:
     objects, _ = build_object_graph(roots)
-    objects, metrics, path_map = _apply_filter(
+    objects, metrics, _, id_path_map = _apply_filter(
         objects, filter_expr, expand_expr, expand_depth, expand_classes
     )
     with open(output_path, "w", encoding="utf-8") as handle:
-        if path_map is None:
+        if id_path_map is None:
             return [], metrics
-        pairs = [(info.obj_id, path_map[info.obj]) for info in objects if info.obj in path_map]
+        pairs = [
+            (info.obj_id, id_path_map[info.obj])
+            for info in objects
+            if info.obj in id_path_map
+        ]
         pairs = sorted(set(pairs))
-        id_paths = [f"/{obj_id}" for obj_id, _ in pairs]
-        for id_path in id_paths:
+        for _, id_path in pairs:
             handle.write(f"{id_path}\n")
     return pairs, metrics
+
+
+def summarize_model(roots: Iterable[EObject]) -> str:
+    objects, _ = build_object_graph(roots)
+    class_counts: dict[str, int] = {}
+    class_attrs: dict[str, list[dict[str, object]]] = {}
+    class_refs: dict[str, list[dict[str, object]]] = {}
+    for info in objects:
+        name = info.obj.eClass.name
+        class_counts[name] = class_counts.get(name, 0) + 1
+        if name not in class_attrs:
+            attrs: list[dict[str, object]] = []
+            for attr in _all_features(info.obj, "eAllAttributes"):
+                attr_type = attr.eType.name if getattr(attr, "eType", None) else None
+                attrs.append({"name": attr.name, "type": attr_type, "many": bool(attr.many)})
+            refs: list[dict[str, object]] = []
+            for ref in _all_features(info.obj, "eAllReferences"):
+                ref_type = ref.eType.name if getattr(ref, "eType", None) else None
+                refs.append(
+                    {
+                        "name": ref.name,
+                        "type": ref_type,
+                        "many": bool(ref.many),
+                        "containment": bool(ref.containment),
+                    }
+                )
+            class_attrs[name] = attrs
+            class_refs[name] = refs
+    lines = [f"Total objects: {len(objects)}", "Classes:"]
+    for name in sorted(class_counts):
+        lines.append(f"  {name}: {class_counts[name]}")
+        attrs = class_attrs.get(name, [])
+        refs = class_refs.get(name, [])
+        if attrs:
+            lines.append(f"    Attributes: {', '.join(attrs)}")
+        if refs:
+            lines.append(f"    References: {', '.join(refs)}")
+    return "\n".join(lines)
+
+
+def model_dump(roots: Iterable[EObject]) -> dict[str, object]:
+    objects, _ = build_object_graph(roots)
+    class_counts: dict[str, int] = {}
+    class_attrs: dict[str, list[str]] = {}
+    class_refs: dict[str, list[str]] = {}
+    for info in objects:
+        name = info.obj.eClass.name
+        class_counts[name] = class_counts.get(name, 0) + 1
+        if name not in class_attrs:
+            attrs = [a.name for a in _all_features(info.obj, "eAllAttributes")]
+            refs = [r.name for r in _all_features(info.obj, "eAllReferences")]
+            class_attrs[name] = attrs
+            class_refs[name] = refs
+    classes = []
+    for name in sorted(class_counts):
+        classes.append(
+            {
+                "name": name,
+                "count": class_counts[name],
+                "attributes": class_attrs.get(name, []),
+                "references": class_refs.get(name, []),
+            }
+        )
+    return {
+        "total_objects": len(objects),
+        "classes": classes,
+    }

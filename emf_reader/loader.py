@@ -98,8 +98,66 @@ def summarize_metamodel(packages: Iterable[EPackage]) -> str:
             attrs = [a.name for a in _all_features(cls, "eAllAttributes")]
             refs = [r.name for r in _all_features(cls, "eAllReferences")]
             lines.append(f"  Class: {cls.name} attrs={len(attrs)} refs={len(refs)}")
+            if attrs:
+                lines.append(f"    Attributes: {', '.join(attrs)}")
+            if refs:
+                lines.append(f"    References: {', '.join(refs)}")
     lines.append(f"Total classes: {total_classes}")
     return "\n".join(lines)
+
+
+def metamodel_dump(packages: Iterable[EPackage]) -> dict[str, object]:
+    def dump_package(pkg: EPackage) -> dict[str, object]:
+        pkg_entry: dict[str, object] = {
+            "name": pkg.name,
+            "nsURI": pkg.nsURI,
+            "classes": [],
+            "subpackages": [],
+        }
+        for cls in pkg.eClassifiers:
+            if cls.eClass.name != "EClass":
+                continue
+            attrs = []
+            for attr in _all_features(cls, "eAllAttributes"):
+                attr_type = attr.eType.name if getattr(attr, "eType", None) else None
+                attrs.append({"name": attr.name, "type": attr_type, "many": bool(attr.many)})
+            refs = []
+            for ref in _all_features(cls, "eAllReferences"):
+                ref_type = ref.eType.name if getattr(ref, "eType", None) else None
+                refs.append(
+                    {
+                        "name": ref.name,
+                        "type": ref_type,
+                        "many": bool(ref.many),
+                        "containment": bool(ref.containment),
+                    }
+                )
+            pkg_entry["classes"].append(
+                {
+                    "name": cls.name,
+                    "attributes": attrs,
+                    "references": refs,
+                }
+            )
+        for sub in pkg.eSubpackages:
+            pkg_entry["subpackages"].append(dump_package(sub))
+        return pkg_entry
+
+    data: dict[str, object] = {"packages": []}
+    total_classes = 0
+    for pkg in packages:
+        data["packages"].append(dump_package(pkg))
+        for cls in pkg.eClassifiers:
+            if cls.eClass.name == "EClass":
+                total_classes += 1
+        for sub in _iter_packages([pkg]):
+            if sub is pkg:
+                continue
+            for cls in sub.eClassifiers:
+                if cls.eClass.name == "EClass":
+                    total_classes += 1
+    data["total_classes"] = total_classes
+    return data
 
 
 def summarize_instances(resources: Iterable[XMIResource]) -> str:

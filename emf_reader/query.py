@@ -75,6 +75,7 @@ def build_context(obj: EObject, obj_id: str, path: str) -> Dict[str, Any]:
         "eclass": obj.eClass.name,
         "nsuri": obj.eClass.ePackage.nsURI if obj.eClass.ePackage else None,
         "id": obj_id,
+        "ID": getattr(obj, "_internal_id", None) or obj_id,
         "path": path,
         "attrs": attrs,
     }
