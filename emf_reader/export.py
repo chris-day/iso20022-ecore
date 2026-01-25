@@ -499,3 +499,55 @@ def model_dump(roots: Iterable[EObject]) -> dict[str, object]:
         "total_objects": len(objects),
         "classes": classes,
     }
+
+
+def dump_instances_by_class(
+    roots: Iterable[EObject], filter_expr: str | None = None
+) -> dict[str, object]:
+    objects, _ = build_object_graph(roots)
+    id_map = {info.obj: info.obj_id for info in objects}
+    classes: dict[str, list[dict[str, object]]] = {}
+    predicate = build_predicate(filter_expr) if filter_expr else None
+    for info in objects:
+        if predicate:
+            ctx = build_context(info.obj, info.obj_id, info.path)
+            if not predicate(ctx):
+                continue
+        obj = info.obj
+        cls_name = obj.eClass.name
+        entry: dict[str, object] = {
+            "id": info.obj_id,
+            "ID": _id_label(obj, info.obj_id),
+            "eClass": cls_name,
+            "nsURI": obj.eClass.ePackage.nsURI if obj.eClass.ePackage else None,
+            "path": info.path,
+            "attributes": {},
+            "containment": [],
+            "references": {},
+        }
+        for attr in _all_features(obj, "eAllAttributes"):
+            value = obj.eGet(attr)
+            if attr.many:
+                entry["attributes"][attr.name] = _json_safe(list(value)) if value is not None else []
+            else:
+                entry["attributes"][attr.name] = _json_safe(value)
+        for ref in _containment_features(obj):
+            value = obj.eGet(ref)
+            if value is None:
+                continue
+            if ref.many:
+                for child in list(value):
+                    if child in id_map:
+                        entry["containment"].append(id_map[child])
+            else:
+                if value in id_map:
+                    entry["containment"].append(id_map[value])
+        for ref in _all_features(obj, "eAllReferences"):
+            if ref.containment:
+                continue
+            entry["references"][ref.name] = _reference_ids(obj, ref, id_map)
+        classes.setdefault(cls_name, []).append(entry)
+    return {
+        "total_objects": len(objects),
+        "classes": classes,
+    }

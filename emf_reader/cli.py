@@ -5,7 +5,15 @@ import json
 import logging
 import sys
 
-from .export import export_edges, export_json, export_paths, export_path_ids, summarize_model, model_dump
+from .export import (
+    export_edges,
+    export_json,
+    export_paths,
+    export_path_ids,
+    summarize_model,
+    model_dump,
+    dump_instances_by_class,
+)
 from .loader import (
     count_metamodel_classes,
     instance_stats,
@@ -32,6 +40,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dump-model", action="store_true", help="Print model summary")
     parser.add_argument("--dump-model-json", help="Write model summary to JSON")
     parser.add_argument("--dump-instances", action="store_true", help="Print instance summary")
+    parser.add_argument("--dump-instances-json", help="Write instances grouped by class to JSON")
+    parser.add_argument("--dump-instances-filter", help="Filter expression for instance JSON dump")
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
     parser.add_argument("--export-edges", help="Export edges to CSV")
     parser.add_argument("--export-paths", help="Export expansion paths to text")
@@ -89,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         args.dump_instances
         or args.dump_model
         or args.dump_model_json
+        or args.dump_instances_json
         or args.export_json
         or args.export_edges
         or args.export_paths
@@ -115,6 +126,15 @@ def main(argv: list[str] | None = None) -> int:
             with open(args.dump_model_json, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
             logging.info("Wrote model JSON: %s", args.dump_model_json)
+        if args.dump_instances_json:
+            try:
+                payload = dump_instances_by_class(roots, filter_expr=args.dump_instances_filter)
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            with open(args.dump_instances_json, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle, indent=2)
+            logging.info("Wrote instances JSON: %s", args.dump_instances_json)
         expand_depth = args.expand_depth if args.expand_from else None
         expand_classes = None
         if args.expand_classes:

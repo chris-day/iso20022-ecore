@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.30
+Version: 0.1.32
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -16,7 +16,8 @@ python -m pip install -e .
 
 ```bash
 emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel-json <path>] \
-  [--dump-instances] [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
+  [--dump-instances] [--dump-instances-json <path>] [--dump-instances-filter <expr>] \
+  [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
@@ -128,6 +129,25 @@ emf-read \
   --ecore /var/software/input/ISO20022.ecore \
   --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
   --dump-model-json /tmp/model.json
+```
+
+Dump instances grouped by class to JSON:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --dump-instances-json /tmp/instances_by_class.json
+```
+
+Dump filtered instances grouped by class to JSON:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --dump-instances-json /tmp/account_instances.json \
+  --dump-instances-filter "eclass == 'BusinessComponent' and name == 'Account'"
 ```
 
 Model JSON includes per-class attribute/reference definitions with target type, cardinality, and containment.
