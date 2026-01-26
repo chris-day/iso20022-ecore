@@ -96,6 +96,11 @@ def build_context(obj: EObject, obj_id: str, path: str) -> Dict[str, Any]:
         "is_class": is_class,
         "is_kind_of": is_kind_of,
     }
+    name_value = getattr(obj, "name", None)
+    if isinstance(name_value, str):
+        ctx.setdefault("name", name_value)
+    else:
+        ctx.setdefault("name", None)
     ctx.update(attrs)
     return ctx
 
