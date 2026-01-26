@@ -10,6 +10,7 @@ from .export import (
     export_edges,
     export_json,
     export_mermaid,
+    export_gml,
     export_path_ids,
     export_paths,
     export_plantuml,
@@ -46,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dump-instances-filter", help="Filter expression for instance JSON dump")
     parser.add_argument("--export-mermaid", help="Export filtered instance graph to Mermaid")
     parser.add_argument("--export-plantuml", help="Export filtered instance graph to PlantUML")
+    parser.add_argument("--export-gml", help="Export filtered instance graph to GML")
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
     parser.add_argument("--export-edges", help="Export edges to CSV")
     parser.add_argument("--export-paths", help="Export expansion paths to text")
@@ -73,7 +75,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     _configure_logging(args.verbose)
-    logging.info("Args: %s", vars(args))
+    logging.info("Parameters:")
+    for name, value in vars(args).items():
+        logging.info("%s: %s", name, value)
 
     try:
         rset, packages = load_metamodel(args.ecore)
@@ -110,6 +114,7 @@ def main(argv: list[str] | None = None) -> int:
         or args.export_path_ids
         or args.export_mermaid
         or args.export_plantuml
+        or args.export_gml
     ):
         if not args.instance:
             logging.error("Instance file required for instance operations")
@@ -162,6 +167,18 @@ def main(argv: list[str] | None = None) -> int:
             logging.info(
                 "Wrote PlantUML: %s (nodes=%s edges=%s)",
                 args.export_plantuml,
+                stats["nodes"],
+                stats["edges"],
+            )
+        if args.export_gml:
+            try:
+                stats = export_gml(roots, args.export_gml, filter_expr=args.filter_expr)
+            except ValueError as exc:
+                logging.error("Invalid filter expression: %s", exc)
+                return 2
+            logging.info(
+                "Wrote GML: %s (nodes=%s edges=%s)",
+                args.export_gml,
                 stats["nodes"],
                 stats["edges"],
             )

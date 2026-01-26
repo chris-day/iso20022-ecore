@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.39
+Version: 0.1.42
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -19,7 +19,7 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--dump-instances] [--dump-instances-json <path>] [--dump-instances-filter <expr>] \
   [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
-  [--export-mermaid <path>] [--export-plantuml <path>] \
+  [--export-mermaid <path>] [--export-plantuml <path>] [--export-gml <path>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
 ```
@@ -169,6 +169,16 @@ emf-read \
   --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
   --filter-expr "eclass == 'BusinessComponent'" \
   --export-plantuml /tmp/business_components.puml
+```
+
+Export a GML graph for BusinessComponent instances (labelled by name):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --filter-expr "eclass == 'BusinessComponent'" \
+  --export-gml /tmp/business_components.gml
 ```
 
 Model JSON includes per-class attribute/reference definitions with target type, cardinality, and containment.

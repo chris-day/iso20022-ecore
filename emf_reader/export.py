@@ -137,6 +137,37 @@ def _preferred_id(obj: EObject, fallback: str) -> str:
     return _id_label(obj, fallback)
 
 
+def _xmi_id(obj: EObject) -> str | None:
+    value = getattr(obj, "_internal_id", None)
+    if isinstance(value, str) and value:
+        return value
+    return None
+
+
+def _proxy_id(obj: EObject) -> str | None:
+    proxy_uri = getattr(obj, "eProxyURI", None)
+    if proxy_uri is None:
+        return None
+    fragment = getattr(proxy_uri, "fragment", None)
+    if isinstance(fragment, str) and fragment:
+        return fragment
+    proxy_text = str(proxy_uri)
+    if "#" in proxy_text:
+        return proxy_text.split("#", 1)[1] or None
+    return None
+
+
+def _resolve_filtered_target(
+    target: EObject, filtered_set: set[EObject], xmi_id_map: dict[str, EObject]
+) -> EObject | None:
+    if target in filtered_set:
+        return target
+    target_id = _xmi_id(target) or _proxy_id(target)
+    if target_id and target_id in xmi_id_map:
+        return xmi_id_map[target_id]
+    return None
+
+
 def _expand_from(
     objects: List[ObjectInfo],
     expand_expr: str,
@@ -591,6 +622,7 @@ def export_mermaid(
     node_count = 0
     edge_count = 0
     filtered_objs = {info.obj for info in filtered}
+    xmi_id_map = { _xmi_id(info.obj): info.obj for info in filtered if _xmi_id(info.obj)}
 
     def node_label(obj: EObject) -> str:
         name = getattr(obj, "name", None)
@@ -607,9 +639,10 @@ def export_mermaid(
         for ref in _all_features(info.obj, "eAllReferences"):
             value = info.obj.eGet(ref)
             for target in _iter_values(value):
-                if target not in filtered_objs:
+                resolved = _resolve_filtered_target(target, filtered_objs, xmi_id_map)
+                if resolved is None:
                     continue
-                dst_id = id_map[target].replace("-", "_")
+                dst_id = id_map[resolved].replace("-", "_")
                 lines.append(f"  {src_id} --> {dst_id}")
                 edge_count += 1
 
@@ -640,6 +673,7 @@ def export_plantuml(
     node_count = 0
     edge_count = 0
     filtered_objs = {info.obj for info in filtered}
+    xmi_id_map = { _xmi_id(info.obj): info.obj for info in filtered if _xmi_id(info.obj)}
 
     def node_label(obj: EObject) -> str:
         name = getattr(obj, "name", None)
@@ -656,13 +690,73 @@ def export_plantuml(
         for ref in _all_features(info.obj, "eAllReferences"):
             value = info.obj.eGet(ref)
             for target in _iter_values(value):
-                if target not in filtered_objs:
+                resolved = _resolve_filtered_target(target, filtered_objs, xmi_id_map)
+                if resolved is None:
                     continue
-                dst_id = id_map[target].replace("-", "_")
+                dst_id = id_map[resolved].replace("-", "_")
                 lines.append(f"{src_id} --> {dst_id}")
                 edge_count += 1
 
     lines.append("@enduml")
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+        handle.write("\n")
+
+    return {"nodes": node_count, "edges": edge_count}
+
+
+def export_gml(
+    roots: Iterable[EObject],
+    output_path: str,
+    filter_expr: str | None = None,
+) -> dict[str, int]:
+    objects, _ = build_object_graph(roots)
+    predicate = build_predicate(filter_expr) if filter_expr else None
+    filtered = []
+    for info in objects:
+        if predicate:
+            ctx = build_context(info.obj, info.obj_id, info.path)
+            if not predicate(ctx):
+                continue
+        filtered.append(info)
+
+    filtered_objs = [info.obj for info in filtered]
+    obj_to_idx = {obj: idx for idx, obj in enumerate(filtered_objs)}
+    filtered_set = set(filtered_objs)
+    xmi_id_map = { _xmi_id(obj): obj for obj in filtered_objs if _xmi_id(obj)}
+
+    def node_label(obj: EObject) -> str:
+        name = getattr(obj, "name", None)
+        return name if isinstance(name, str) and name else obj.eClass.name
+
+    lines = ["graph [", "  directed 1"]
+    node_count = 0
+    edge_count = 0
+
+    for obj in filtered_objs:
+        idx = obj_to_idx[obj]
+        label = node_label(obj).replace("\"", "'")
+        lines.append("  node [")
+        lines.append(f"    id {idx}")
+        lines.append(f"    label \"{label}\"")
+        lines.append("  ]")
+        node_count += 1
+
+    filtered_set = set(filtered_objs)
+    for src in filtered_objs:
+        for ref in _all_features(src, "eAllReferences"):
+            value = src.eGet(ref)
+            for target in _iter_values(value):
+                resolved = _resolve_filtered_target(target, filtered_set, xmi_id_map)
+                if resolved is None:
+                    continue
+                lines.append("  edge [")
+                lines.append(f"    source {obj_to_idx[src]}")
+                lines.append(f"    target {obj_to_idx[resolved]}")
+                lines.append("  ]")
+                edge_count += 1
+
+    lines.append("]")
     with open(output_path, "w", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
         handle.write("\n")
