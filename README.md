@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.42
+Version: 0.1.47
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -20,6 +20,7 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--export-mermaid <path>] [--export-plantuml <path>] [--export-gml <path>] \
+  [--neighbors-from <expr>] [--neighbors <n>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
 ```
@@ -63,9 +64,30 @@ Filter exports with a tiny expression language:
 emf-read \
   --ecore /var/software/input/ISO20022.ecore \
   --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
-  --filter-expr "eclass == 'BusinessComponent' and registrationStatus == 'REGISTERED'" \
+  --filter-expr "is_kind_of('BusinessComponent') and registrationStatus == 'REGISTERED'" \
   --export-json /tmp/business_components.json \
   --export-edges /tmp/business_components_edges.csv
+```
+
+Filter using helper functions (include all BusinessComponent subclasses plus BusinessAssociationEnd):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --filter-expr "is_kind_of('BusinessComponent') or is_class('BusinessAssociationEnd')" \
+  --export-mermaid /tmp/business_components_with_assoc.mmd
+```
+
+Neighborhood expansion from a seed (6 hops, containment + references):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --neighbors-from "name == 'Account'" \
+  --neighbors 6 \
+  --export-mermaid /tmp/account_neighborhood.mmd
 ```
 
 Expand the graph from a matching start node (depth 2):
@@ -157,7 +179,7 @@ Export a Mermaid diagram for BusinessComponent instances (labelled by name):
 emf-read \
   --ecore /var/software/input/ISO20022.ecore \
   --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
-  --filter-expr "eclass == 'BusinessComponent'" \
+  --filter-expr "is_kind_of('BusinessComponent')" \
   --export-mermaid /tmp/business_components.mmd
 ```
 
@@ -167,7 +189,7 @@ Export a PlantUML class diagram for BusinessComponent instances (labelled by nam
 emf-read \
   --ecore /var/software/input/ISO20022.ecore \
   --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
-  --filter-expr "eclass == 'BusinessComponent'" \
+  --filter-expr "is_kind_of('BusinessComponent')" \
   --export-plantuml /tmp/business_components.puml
 ```
 
@@ -177,7 +199,7 @@ Export a GML graph for BusinessComponent instances (labelled by name):
 emf-read \
   --ecore /var/software/input/ISO20022.ecore \
   --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
-  --filter-expr "eclass == 'BusinessComponent'" \
+  --filter-expr "is_kind_of('BusinessComponent')" \
   --export-gml /tmp/business_components.gml
 ```
 
@@ -211,6 +233,16 @@ Filter expression variables:
 - `eclass`, `nsuri`, `id`, `ID`, `local_id`, `path`
 - `attrs` (dict of attribute values)
 - attribute names as direct variables (e.g., `name`, `registrationStatus`)
+- helpers: `is_class('Foo')`, `is_kind_of('BusinessComponent')`
+
+### Filter language
+Patterns you can use in `--filter-expr`:
+
+- Exact class match: `is_class('BusinessAssociationEnd')`
+- Subclass match: `is_kind_of('BusinessComponent')`
+- Attribute equality: `registrationStatus == 'REGISTERED'`
+- Combined conditions: `is_kind_of('BusinessComponent') and name == 'Account'`
+- Set membership: `eclass in ('BusinessComponent', 'BusinessAssociationEnd')`
 
 ## Output formats
 

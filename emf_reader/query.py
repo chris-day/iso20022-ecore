@@ -19,6 +19,7 @@ _ALLOWED_NODES = (
     ast.Set,
     ast.Dict,
     ast.Subscript,
+    ast.Call,
 )
 
 _INDEX_NODE = getattr(ast, "Index", None)
@@ -73,6 +74,17 @@ def build_context(obj: EObject, obj_id: str, path: str) -> Dict[str, Any]:
             attrs[attr.name] = _json_safe(value)
     internal_id = getattr(obj, "_internal_id", None)
     preferred_id = internal_id if isinstance(internal_id, str) and internal_id else obj_id
+    def is_class(name: str) -> bool:
+        return obj.eClass.name == name
+
+    def is_kind_of(name: str) -> bool:
+        if obj.eClass.name == name:
+            return True
+        for sup in obj.eClass.eAllSuperTypes():
+            if sup.name == name:
+                return True
+        return False
+
     ctx: Dict[str, Any] = {
         "eclass": obj.eClass.name,
         "nsuri": obj.eClass.ePackage.nsURI if obj.eClass.ePackage else None,
@@ -81,6 +93,8 @@ def build_context(obj: EObject, obj_id: str, path: str) -> Dict[str, Any]:
         "ID": preferred_id,
         "path": path,
         "attrs": attrs,
+        "is_class": is_class,
+        "is_kind_of": is_kind_of,
     }
     ctx.update(attrs)
     return ctx
@@ -92,6 +106,13 @@ def _validate_expr(tree: ast.AST) -> None:
             raise ValueError(f"Unsupported expression element: {type(node).__name__}")
         if isinstance(node, ast.Name) and node.id.startswith("__"):
             raise ValueError("Invalid name in expression")
+        if isinstance(node, ast.Call):
+            if not isinstance(node.func, ast.Name):
+                raise ValueError("Invalid function call in expression")
+            if node.func.id not in {"is_class", "is_kind_of"}:
+                raise ValueError(f"Unsupported function: {node.func.id}")
+            if node.keywords:
+                raise ValueError("Keyword arguments are not supported")
 
 
 def build_predicate(expr: str) -> Callable[[Dict[str, Any]], bool]:
