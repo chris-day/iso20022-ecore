@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.47
+Version: 0.1.48
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -88,6 +88,18 @@ emf-read \
   --neighbors-from "name == 'Account'" \
   --neighbors 6 \
   --export-mermaid /tmp/account_neighborhood.mmd
+```
+
+Neighborhood expansion with class filtering:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --neighbors-from "name == 'Account'" \
+  --neighbors 6 \
+  --filter-expr "is_kind_of('BusinessComponent') or is_class('BusinessAssociationEnd')" \
+  --export-mermaid /tmp/account_neighborhood_filtered.mmd
 ```
 
 Expand the graph from a matching start node (depth 2):
