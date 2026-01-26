@@ -6,8 +6,11 @@ from dataclasses import dataclass
 from typing import Dict, Iterable, List, Tuple
 
 from pyecore.ecore import EObject
+from pyecore.resources import URI
+from pyecore.resources.xmi import XMIResource
 
 from .query import build_context, build_predicate
+from .loader import _configure_resource_set
 
 
 @dataclass
@@ -881,3 +884,38 @@ def export_gml(
     if metrics:
         result.update(metrics)
     return result
+
+
+def export_filtered_instance(
+    instance_resource: XMIResource,
+    output_path: str,
+    include_classes: set[str] | None = None,
+    exclude_classes: set[str] | None = None,
+) -> dict[str, int]:
+    objects, _ = build_object_graph(instance_resource.contents)
+    include_classes = include_classes or set()
+    exclude_classes = exclude_classes or set()
+    selected: set[EObject] = set()
+    for info in objects:
+        cls_name = info.obj.eClass.name
+        if include_classes and cls_name not in include_classes:
+            continue
+        if exclude_classes and cls_name in exclude_classes:
+            continue
+        selected.add(info.obj)
+
+    rset = instance_resource.resource_set
+    if rset is None:
+        rset = _configure_resource_set()
+    rset.resource_factory["xmi"] = XMIResource
+    rset.resource_factory["xml"] = XMIResource
+    rset.resource_factory[None] = XMIResource
+    out_res = rset.create_resource(URI(output_path))
+
+    roots = [obj for obj in selected if obj.eContainer() not in selected]
+    for obj in roots:
+        out_res.append(obj)
+
+    out_res.save()
+
+    return {"selected": len(selected), "roots": len(roots)}

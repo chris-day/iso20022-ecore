@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.50
+Version: 0.1.51
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -20,6 +20,7 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--export-mermaid <path>] [--export-plantuml <path>] [--export-gml <path>] \
+  [--export-instance <path>] [--include-classes <list>] [--exclude-classes <list>] \
   [--neighbors-from <expr>] [--neighbors <n>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
@@ -100,6 +101,17 @@ emf-read \
   --neighbors 6 \
   --filter-expr "is_kind_of('BusinessComponent') or is_class('BusinessAssociationEnd')" \
   --export-mermaid /tmp/account_neighborhood_filtered.mmd
+```
+
+Export a filtered instance resource (XMI):
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --export-instance /tmp/filtered.iso20022 \
+  --include-classes BusinessComponent,BusinessAssociationEnd \
+  --exclude-classes BusinessProcess
 ```
 
 Expand the graph from a matching start node (depth 2):

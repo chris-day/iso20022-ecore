@@ -8,9 +8,10 @@ import sys
 from .export import (
     dump_instances_by_class,
     export_edges,
+    export_filtered_instance,
+    export_gml,
     export_json,
     export_mermaid,
-    export_gml,
     export_path_ids,
     export_paths,
     export_plantuml,
@@ -48,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--export-mermaid", help="Export filtered instance graph to Mermaid")
     parser.add_argument("--export-plantuml", help="Export filtered instance graph to PlantUML")
     parser.add_argument("--export-gml", help="Export filtered instance graph to GML")
+    parser.add_argument("--export-instance", help="Export filtered instance resource to XMI")
+    parser.add_argument("--include-classes", help="Comma-separated EClass names to include")
+    parser.add_argument("--exclude-classes", help="Comma-separated EClass names to exclude")
     parser.add_argument("--neighbors-from", help="Seed filter expression for neighborhood expansion")
     parser.add_argument("--neighbors", type=int, help="Neighborhood hops for expansion")
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
@@ -117,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
         or args.export_mermaid
         or args.export_plantuml
         or args.export_gml
+        or args.export_instance
     ):
         if not args.instance:
             logging.error("Instance file required for instance operations")
@@ -154,6 +159,12 @@ def main(argv: list[str] | None = None) -> int:
             expand_classes = {name.strip() for name in args.expand_classes.split(",") if name.strip()}
         neighbor_expr = args.neighbors_from
         neighbor_hops = args.neighbors if args.neighbors is not None else None
+        include_classes = None
+        exclude_classes = None
+        if args.include_classes:
+            include_classes = {name.strip() for name in args.include_classes.split(",") if name.strip()}
+        if args.exclude_classes:
+            exclude_classes = {name.strip() for name in args.exclude_classes.split(",") if name.strip()}
         if args.export_mermaid:
             try:
                 stats = export_mermaid(
@@ -180,6 +191,19 @@ def main(argv: list[str] | None = None) -> int:
                     stats["edges_traversed"],
                     stats["max_hops"],
                 )
+        if args.export_instance:
+            stats = export_filtered_instance(
+                instance_resource,
+                args.export_instance,
+                include_classes=include_classes,
+                exclude_classes=exclude_classes,
+            )
+            logging.info(
+                "Wrote instance XMI: %s (selected=%s roots=%s)",
+                args.export_instance,
+                stats["selected"],
+                stats["roots"],
+            )
         if args.export_plantuml:
             try:
                 stats = export_plantuml(
