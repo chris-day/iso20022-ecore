@@ -79,25 +79,26 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args(argv)
-    _configure_logging(args.verbose)
-    logging.info("Parameters:")
-    for name, value in vars(args).items():
-        logging.info("%s: %s", name, value)
-
     try:
-        rset, packages = load_metamodel(args.ecore)
-    except Exception as exc:  # noqa: BLE001
-        logging.error("Failed to load metamodel: %s", exc)
-        return 2
-    stats = metamodel_stats(packages)
-    logging.info(
-        "Metamodel stats: packages=%s classes=%s attributes=%s references=%s",
-        stats["packages"],
-        stats["classes"],
-        stats["attributes"],
-        stats["references"],
-    )
+        args = parser.parse_args(argv)
+        _configure_logging(args.verbose)
+        logging.info("Parameters:")
+        for name, value in vars(args).items():
+            logging.info("%s: %s", name, value)
+
+        try:
+            rset, packages = load_metamodel(args.ecore)
+        except Exception as exc:  # noqa: BLE001
+            logging.error("Failed to load metamodel: %s", exc)
+            return 2
+        stats = metamodel_stats(packages)
+        logging.info(
+            "Metamodel stats: packages=%s classes=%s attributes=%s references=%s",
+            stats["packages"],
+            stats["classes"],
+            stats["attributes"],
+            stats["references"],
+        )
 
     if args.dump_metamodel:
         summary = summarize_metamodel(packages)
@@ -405,7 +406,10 @@ def main(argv: list[str] | None = None) -> int:
                 if metrics["start_nodes"] == 0:
                     logging.warning("No expansion start nodes matched the expression")
 
-    return 0
+        return 0
+    except KeyboardInterrupt:
+        print("Stopped by user.")
+        return 130
 
 
 if __name__ == "__main__":

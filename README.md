@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.51
+Version: 0.1.61
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -24,6 +24,8 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--neighbors-from <expr>] [--neighbors <n>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
+
+xsd-enrich --ecore <path> --instance <path> --xsd <path> --output <path> [--map <path>] [--trace-name <name>] [--verbose]
 ```
 
 ### Examples
@@ -112,6 +114,40 @@ emf-read \
   --export-instance /tmp/filtered.iso20022 \
   --include-classes BusinessComponent,BusinessAssociationEnd \
   --exclude-classes BusinessProcess
+```
+
+Enrich an XSD with xmi:id annotations:
+
+```bash
+xsd-enrich \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --xsd auth.016.001.03.xsd \
+  --output /tmp/auth.016.001.03.enriched.xsd
+```
+
+Trace a specific XSD name during mapping:
+
+```bash
+xsd-enrich \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --xsd auth.016.001.03.xsd \
+  --output /tmp/auth.016.001.03.enriched.xsd \
+  --trace-name UnderlyingIdentification2Choice
+```
+
+The enrichment adds `xs:annotation/xs:appinfo` entries for `xmi:id` and, when a parent exists, `parent` (the parent object's XMI id, or its name if the id is missing).
+
+Optional mapping file (`--map`) can specify preferred EClass matches by XSD kind:
+
+```json
+{
+  "complexType": ["MessageDefinition", "MessageComponent", "MessageComponentType", "ChoiceComponent"],
+  "simpleType": ["DataType"],
+  "element": ["MessageElement", "MessageBuildingBlock", "MessageAssociationEnd"],
+  "attribute": ["MessageAttribute"]
+}
 ```
 
 Expand the graph from a matching start node (depth 2):
