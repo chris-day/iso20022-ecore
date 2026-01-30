@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.78
+Version: 0.1.81
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -139,7 +139,7 @@ xsd-enrich \
   --trace-name UnderlyingIdentification2Choice
 ```
 
-The enrichment adds `xs:annotation/xs:appinfo` entries for `xmi:id`, `definition`, and, when a parent exists, `parent` (the parent object's XMI id, or its name if the id is missing). It also annotates `xs:schema` with the `messageDefinitionIdentifier` and its parts when the targetNamespace matches.
+The enrichment adds `xs:annotation/xs:appinfo` entries for `xmi:id`, `definition`, `businessElementName`, `businessComponentName`, `businessElementId`, `businessComponentId`, and, when a parent exists, `parent` (the parent object's XMI id, or its name if the id is missing). It also annotates `xs:schema` with the `messageDefinitionIdentifier` and its parts when the targetNamespace matches.
 
 Optional mapping file (`--map`) can specify preferred EClass matches by XSD kind:
 

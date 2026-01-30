@@ -68,6 +68,37 @@ def _is_allowed(obj: object) -> bool:
     return False
 
 
+def _iter_ref_targets(value: object) -> list[object]:
+    if value is None:
+        return []
+    if hasattr(value, "eClass"):
+        return [value]
+    if hasattr(value, "__iter__") and not isinstance(value, (str, bytes)):
+        try:
+            return [v for v in value if hasattr(v, "eClass")]
+        except Exception:  # noqa: BLE001
+            return []
+    return []
+
+
+def _collect_objects_with_references(roots: Iterable[object]) -> list[object]:
+    seen: set[object] = set()
+    queue = list(roots)
+    while queue:
+        obj = queue.pop()
+        if obj in seen:
+            continue
+        seen.add(obj)
+        for ref in _all_features(obj, "eAllReferences"):
+            try:
+                value = obj.eGet(ref)
+            except Exception:  # noqa: BLE001
+                continue
+            for target in _iter_ref_targets(value):
+                if target not in seen:
+                    queue.append(target)
+    return list(seen)
+
 def _index_model_objects(objects: Iterable[object]) -> Dict[str, List[object]]:
     index: Dict[str, List[object]] = {}
     for obj in objects:
@@ -175,7 +206,9 @@ def enrich_xsd(
     instance_resource = load_instance(instance_path, rset)
 
     objects, _ = build_object_graph(instance_resource.contents)
-    model_objects = [info.obj for info in objects]
+    containment_objects = [info.obj for info in objects]
+    model_objects = _collect_objects_with_references(containment_objects)
+    id_index = { _get_xmi_id(obj): obj for obj in model_objects if _get_xmi_id(obj)}
     index = _index_model_objects(model_objects)
 
     prefs = dict(DEFAULT_KIND_PREFERENCES)
@@ -289,6 +322,46 @@ def enrich_xsd(
             definition = getattr(picked, "definition", None)
             if isinstance(definition, str) and definition:
                 _ensure_annotation(elem, "definition", definition)
+            if picked.eClass.name == "MessageElement":
+                be_trace = getattr(picked, "businessElementTrace", None)
+                bc_trace = getattr(picked, "businessComponentTrace", None)
+
+                def _trace_name(trace_obj: object) -> str | None:
+                    if trace_obj is None:
+                        return None
+                    if hasattr(trace_obj, "eClass"):
+                        name = getattr(trace_obj, "name", None)
+                        return name if isinstance(name, str) and name else None
+                    if isinstance(trace_obj, str):
+                        target = id_index.get(trace_obj)
+                        if target is not None:
+                            name = getattr(target, "name", None)
+                            return name if isinstance(name, str) and name else None
+                    return None
+
+                def _trace_id(trace_obj: object) -> str | None:
+                    if trace_obj is None:
+                        return None
+                    if hasattr(trace_obj, "eClass"):
+                        return _get_xmi_id(trace_obj)
+                    if isinstance(trace_obj, str):
+                        target = id_index.get(trace_obj)
+                        if target is not None:
+                            return _get_xmi_id(target)
+                    return None
+
+                be_name = _trace_name(be_trace)
+                if be_name:
+                    _ensure_annotation(elem, "businessElementName", be_name)
+                be_id = _trace_id(be_trace)
+                if be_id:
+                    _ensure_annotation(elem, "businessElementId", be_id)
+                bc_name = _trace_name(bc_trace)
+                if bc_name:
+                    _ensure_annotation(elem, "businessComponentName", bc_name)
+                bc_id = _trace_id(bc_trace)
+                if bc_id:
+                    _ensure_annotation(elem, "businessComponentId", bc_id)
             parent = getattr(picked, "eContainer", lambda: None)()
             if parent is not None:
                 parent_id = _get_xmi_id(parent)
