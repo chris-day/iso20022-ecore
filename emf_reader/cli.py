@@ -100,311 +100,311 @@ def main(argv: list[str] | None = None) -> int:
             stats["references"],
         )
 
-    if args.dump_metamodel:
-        summary = summarize_metamodel(packages)
-        logging.info("Metamodel classes: %s", count_metamodel_classes(packages))
-        print(summary)
-    if args.dump_metamodel_json:
-        payload = metamodel_dump(packages)
-        with open(args.dump_metamodel_json, "w", encoding="utf-8") as handle:
-            json.dump(payload, handle, indent=2)
-        logging.info("Wrote metamodel JSON: %s", args.dump_metamodel_json)
-
-    if (
-        args.dump_instances
-        or args.dump_model
-        or args.dump_model_json
-        or args.dump_instances_json
-        or args.export_json
-        or args.export_edges
-        or args.export_paths
-        or args.export_path_ids
-        or args.export_mermaid
-        or args.export_plantuml
-        or args.export_gml
-        or args.export_instance
-    ):
-        if not args.instance:
-            logging.error("Instance file required for instance operations")
-            return 2
-        try:
-            instance_resource = load_instance(args.instance, rset)
-        except Exception as exc:  # noqa: BLE001
-            logging.error("Failed to load instance: %s", exc)
-            return 2
-        instats = instance_stats([instance_resource])
-        logging.info("Instance stats: roots=%s", instats["roots"])
-
-        roots = list(instance_resource.contents)
-        if args.dump_instances:
-            print(summarize_instances([instance_resource]))
-        if args.dump_model:
-            print(summarize_model(roots))
-        if args.dump_model_json:
-            payload = model_dump(roots)
-            with open(args.dump_model_json, "w", encoding="utf-8") as handle:
+        if args.dump_metamodel:
+            summary = summarize_metamodel(packages)
+            logging.info("Metamodel classes: %s", count_metamodel_classes(packages))
+            print(summary)
+        if args.dump_metamodel_json:
+            payload = metamodel_dump(packages)
+            with open(args.dump_metamodel_json, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
-            logging.info("Wrote model JSON: %s", args.dump_model_json)
-        if args.dump_instances_json:
-            try:
-                payload = dump_instances_by_class(roots, filter_expr=args.dump_instances_filter)
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
+            logging.info("Wrote metamodel JSON: %s", args.dump_metamodel_json)
+
+        if (
+            args.dump_instances
+            or args.dump_model
+            or args.dump_model_json
+            or args.dump_instances_json
+            or args.export_json
+            or args.export_edges
+            or args.export_paths
+            or args.export_path_ids
+            or args.export_mermaid
+            or args.export_plantuml
+            or args.export_gml
+            or args.export_instance
+        ):
+            if not args.instance:
+                logging.error("Instance file required for instance operations")
                 return 2
-            with open(args.dump_instances_json, "w", encoding="utf-8") as handle:
-                json.dump(payload, handle, indent=2)
-            logging.info("Wrote instances JSON: %s", args.dump_instances_json)
-        expand_depth = args.expand_depth if args.expand_from else None
-        expand_classes = None
-        if args.expand_classes:
-            expand_classes = {name.strip() for name in args.expand_classes.split(",") if name.strip()}
-        neighbor_expr = args.neighbors_from
-        neighbor_hops = args.neighbors if args.neighbors is not None else None
-        include_classes = None
-        exclude_classes = None
-        if args.include_classes:
-            include_classes = {name.strip() for name in args.include_classes.split(",") if name.strip()}
-        if args.exclude_classes:
-            exclude_classes = {name.strip() for name in args.exclude_classes.split(",") if name.strip()}
-        if args.export_mermaid:
             try:
-                stats = export_mermaid(
-                    roots,
+                instance_resource = load_instance(args.instance, rset)
+            except Exception as exc:  # noqa: BLE001
+                logging.error("Failed to load instance: %s", exc)
+                return 2
+            instats = instance_stats([instance_resource])
+            logging.info("Instance stats: roots=%s", instats["roots"])
+
+            roots = list(instance_resource.contents)
+            if args.dump_instances:
+                print(summarize_instances([instance_resource]))
+            if args.dump_model:
+                print(summarize_model(roots))
+            if args.dump_model_json:
+                payload = model_dump(roots)
+                with open(args.dump_model_json, "w", encoding="utf-8") as handle:
+                    json.dump(payload, handle, indent=2)
+                logging.info("Wrote model JSON: %s", args.dump_model_json)
+            if args.dump_instances_json:
+                try:
+                    payload = dump_instances_by_class(roots, filter_expr=args.dump_instances_filter)
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
+                with open(args.dump_instances_json, "w", encoding="utf-8") as handle:
+                    json.dump(payload, handle, indent=2)
+                logging.info("Wrote instances JSON: %s", args.dump_instances_json)
+            expand_depth = args.expand_depth if args.expand_from else None
+            expand_classes = None
+            if args.expand_classes:
+                expand_classes = {name.strip() for name in args.expand_classes.split(",") if name.strip()}
+            neighbor_expr = args.neighbors_from
+            neighbor_hops = args.neighbors if args.neighbors is not None else None
+            include_classes = None
+            exclude_classes = None
+            if args.include_classes:
+                include_classes = {name.strip() for name in args.include_classes.split(",") if name.strip()}
+            if args.exclude_classes:
+                exclude_classes = {name.strip() for name in args.exclude_classes.split(",") if name.strip()}
+            if args.export_mermaid:
+                try:
+                    stats = export_mermaid(
+                        roots,
+                        args.export_mermaid,
+                        filter_expr=args.filter_expr,
+                        neighbor_expr=neighbor_expr,
+                        neighbor_hops=neighbor_hops,
+                    )
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
+                logging.info(
+                    "Wrote Mermaid: %s (nodes=%s edges=%s)",
                     args.export_mermaid,
-                    filter_expr=args.filter_expr,
-                    neighbor_expr=neighbor_expr,
-                    neighbor_hops=neighbor_hops,
+                    stats["nodes"],
+                    stats["edges"],
                 )
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
-                return 2
-            logging.info(
-                "Wrote Mermaid: %s (nodes=%s edges=%s)",
-                args.export_mermaid,
-                stats["nodes"],
-                stats["edges"],
-            )
-            if "seed_nodes" in stats:
+                if "seed_nodes" in stats:
+                    logging.info(
+                        "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
+                        stats["seed_nodes"],
+                        stats["nodes_seen"],
+                        stats["edges_traversed"],
+                        stats["max_hops"],
+                    )
+            if args.export_instance:
+                stats = export_filtered_instance(
+                    instance_resource,
+                    args.export_instance,
+                    include_classes=include_classes,
+                    exclude_classes=exclude_classes,
+                )
                 logging.info(
-                    "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
-                    stats["seed_nodes"],
-                    stats["nodes_seen"],
-                    stats["edges_traversed"],
-                    stats["max_hops"],
+                    "Wrote instance XMI: %s (selected=%s roots=%s)",
+                    args.export_instance,
+                    stats["selected"],
+                    stats["roots"],
                 )
-        if args.export_instance:
-            stats = export_filtered_instance(
-                instance_resource,
-                args.export_instance,
-                include_classes=include_classes,
-                exclude_classes=exclude_classes,
-            )
-            logging.info(
-                "Wrote instance XMI: %s (selected=%s roots=%s)",
-                args.export_instance,
-                stats["selected"],
-                stats["roots"],
-            )
-        if args.export_plantuml:
-            try:
-                stats = export_plantuml(
-                    roots,
+            if args.export_plantuml:
+                try:
+                    stats = export_plantuml(
+                        roots,
+                        args.export_plantuml,
+                        filter_expr=args.filter_expr,
+                        neighbor_expr=neighbor_expr,
+                        neighbor_hops=neighbor_hops,
+                    )
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
+                logging.info(
+                    "Wrote PlantUML: %s (nodes=%s edges=%s)",
                     args.export_plantuml,
-                    filter_expr=args.filter_expr,
-                    neighbor_expr=neighbor_expr,
-                    neighbor_hops=neighbor_hops,
+                    stats["nodes"],
+                    stats["edges"],
                 )
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
-                return 2
-            logging.info(
-                "Wrote PlantUML: %s (nodes=%s edges=%s)",
-                args.export_plantuml,
-                stats["nodes"],
-                stats["edges"],
-            )
-            if "seed_nodes" in stats:
+                if "seed_nodes" in stats:
+                    logging.info(
+                        "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
+                        stats["seed_nodes"],
+                        stats["nodes_seen"],
+                        stats["edges_traversed"],
+                        stats["max_hops"],
+                    )
+            if args.export_gml:
+                try:
+                    stats = export_gml(
+                        roots,
+                        args.export_gml,
+                        filter_expr=args.filter_expr,
+                        neighbor_expr=neighbor_expr,
+                        neighbor_hops=neighbor_hops,
+                    )
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
                 logging.info(
-                    "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
-                    stats["seed_nodes"],
-                    stats["nodes_seen"],
-                    stats["edges_traversed"],
-                    stats["max_hops"],
-                )
-        if args.export_gml:
-            try:
-                stats = export_gml(
-                    roots,
+                    "Wrote GML: %s (nodes=%s edges=%s)",
                     args.export_gml,
-                    filter_expr=args.filter_expr,
-                    neighbor_expr=neighbor_expr,
-                    neighbor_hops=neighbor_hops,
+                    stats["nodes"],
+                    stats["edges"],
                 )
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
-                return 2
-            logging.info(
-                "Wrote GML: %s (nodes=%s edges=%s)",
-                args.export_gml,
-                stats["nodes"],
-                stats["edges"],
-            )
-            if "seed_nodes" in stats:
-                logging.info(
-                    "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
-                    stats["seed_nodes"],
-                    stats["nodes_seen"],
-                    stats["edges_traversed"],
-                    stats["max_hops"],
-                )
-        if args.export_json:
-            try:
-                entries, metrics = export_json(
-                    roots,
-                    args.export_json,
-                    filter_expr=args.filter_expr,
-                    expand_expr=args.expand_from,
-                    expand_depth=expand_depth,
-                    expand_classes=expand_classes,
-                    neighbor_expr=neighbor_expr,
-                    neighbor_hops=neighbor_hops,
-                )
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
-                return 2
-            logging.info("Wrote JSON: %s (objects=%s)", args.export_json, len(entries))
-            if metrics:
-                if "seed_nodes" in metrics:
+                if "seed_nodes" in stats:
                     logging.info(
                         "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
-                        metrics["seed_nodes"],
-                        metrics["nodes_seen"],
-                        metrics["edges_traversed"],
-                        metrics["max_hops"],
+                        stats["seed_nodes"],
+                        stats["nodes_seen"],
+                        stats["edges_traversed"],
+                        stats["max_hops"],
                     )
-                logging.info(
-                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
-                    metrics["start_nodes"],
-                    metrics["nodes_seen"],
-                    metrics["edges_traversed"],
-                    metrics["loops_detected"],
-                    metrics["max_depth"],
-                )
-        if args.export_edges:
-            try:
-                edges, metrics = export_edges(
-                    roots,
-                    args.export_edges,
-                    filter_expr=args.filter_expr,
-                    expand_expr=args.expand_from,
-                    expand_depth=expand_depth,
-                    expand_classes=expand_classes,
-                    neighbor_expr=neighbor_expr,
-                    neighbor_hops=neighbor_hops,
-                )
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
-                return 2
-            logging.info("Wrote edges: %s (edges=%s)", args.export_edges, len(edges))
-            if metrics:
-                if "seed_nodes" in metrics:
+            if args.export_json:
+                try:
+                    entries, metrics = export_json(
+                        roots,
+                        args.export_json,
+                        filter_expr=args.filter_expr,
+                        expand_expr=args.expand_from,
+                        expand_depth=expand_depth,
+                        expand_classes=expand_classes,
+                        neighbor_expr=neighbor_expr,
+                        neighbor_hops=neighbor_hops,
+                    )
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
+                logging.info("Wrote JSON: %s (objects=%s)", args.export_json, len(entries))
+                if metrics:
+                    if "seed_nodes" in metrics:
+                        logging.info(
+                            "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
+                            metrics["seed_nodes"],
+                            metrics["nodes_seen"],
+                            metrics["edges_traversed"],
+                            metrics["max_hops"],
+                        )
                     logging.info(
-                        "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
-                        metrics["seed_nodes"],
+                        "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                        metrics["start_nodes"],
                         metrics["nodes_seen"],
                         metrics["edges_traversed"],
-                        metrics["max_hops"],
+                        metrics["loops_detected"],
+                        metrics["max_depth"],
                     )
-                logging.info(
-                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
-                    metrics["start_nodes"],
-                    metrics["nodes_seen"],
-                    metrics["edges_traversed"],
-                    metrics["loops_detected"],
-                    metrics["max_depth"],
-                )
-        if args.export_paths:
-            if not args.expand_from:
-                logging.error("export-paths requires --expand-from")
-                return 2
-            try:
-                paths, metrics = export_paths(
-                    roots,
-                    args.export_paths,
-                    filter_expr=args.filter_expr,
-                    expand_expr=args.expand_from,
-                    expand_depth=expand_depth,
-                    expand_classes=expand_classes,
-                    neighbor_expr=neighbor_expr,
-                    neighbor_hops=neighbor_hops,
-                )
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
-                return 2
-            logging.info("Wrote paths: %s (paths=%s)", args.export_paths, len(paths))
-            if paths:
-                preview = ", ".join(paths[:10])
-                logging.info("Expansion paths preview (max 10): %s", preview)
-            if metrics:
-                if "seed_nodes" in metrics:
+            if args.export_edges:
+                try:
+                    edges, metrics = export_edges(
+                        roots,
+                        args.export_edges,
+                        filter_expr=args.filter_expr,
+                        expand_expr=args.expand_from,
+                        expand_depth=expand_depth,
+                        expand_classes=expand_classes,
+                        neighbor_expr=neighbor_expr,
+                        neighbor_hops=neighbor_hops,
+                    )
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
+                logging.info("Wrote edges: %s (edges=%s)", args.export_edges, len(edges))
+                if metrics:
+                    if "seed_nodes" in metrics:
+                        logging.info(
+                            "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
+                            metrics["seed_nodes"],
+                            metrics["nodes_seen"],
+                            metrics["edges_traversed"],
+                            metrics["max_hops"],
+                        )
                     logging.info(
-                        "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
-                        metrics["seed_nodes"],
+                        "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                        metrics["start_nodes"],
                         metrics["nodes_seen"],
                         metrics["edges_traversed"],
-                        metrics["max_hops"],
+                        metrics["loops_detected"],
+                        metrics["max_depth"],
                     )
-                logging.info(
-                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
-                    metrics["start_nodes"],
-                    metrics["nodes_seen"],
-                    metrics["edges_traversed"],
-                    metrics["loops_detected"],
-                    metrics["max_depth"],
-                )
-                if metrics["start_nodes"] == 0:
-                    logging.warning("No expansion start nodes matched the expression")
-        if args.export_path_ids:
-            if not args.expand_from:
-                logging.error("export-path-ids requires --expand-from")
-                return 2
-            try:
-                pairs, metrics = export_path_ids(
-                    roots,
-                    args.export_path_ids,
-                    filter_expr=args.filter_expr,
-                    expand_expr=args.expand_from,
-                    expand_depth=expand_depth,
-                    expand_classes=expand_classes,
-                    neighbor_expr=neighbor_expr,
-                    neighbor_hops=neighbor_hops,
-                )
-            except ValueError as exc:
-                logging.error("Invalid filter expression: %s", exc)
-                return 2
-            logging.info("Wrote path IDs: %s (rows=%s)", args.export_path_ids, len(pairs))
-            if pairs:
-                preview = ", ".join([path for _, path in pairs[:10]])
-                logging.info("Path IDs preview (max 10): %s", preview)
-            if metrics:
-                if "seed_nodes" in metrics:
+            if args.export_paths:
+                if not args.expand_from:
+                    logging.error("export-paths requires --expand-from")
+                    return 2
+                try:
+                    paths, metrics = export_paths(
+                        roots,
+                        args.export_paths,
+                        filter_expr=args.filter_expr,
+                        expand_expr=args.expand_from,
+                        expand_depth=expand_depth,
+                        expand_classes=expand_classes,
+                        neighbor_expr=neighbor_expr,
+                        neighbor_hops=neighbor_hops,
+                    )
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
+                logging.info("Wrote paths: %s (paths=%s)", args.export_paths, len(paths))
+                if paths:
+                    preview = ", ".join(paths[:10])
+                    logging.info("Expansion paths preview (max 10): %s", preview)
+                if metrics:
+                    if "seed_nodes" in metrics:
+                        logging.info(
+                            "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
+                            metrics["seed_nodes"],
+                            metrics["nodes_seen"],
+                            metrics["edges_traversed"],
+                            metrics["max_hops"],
+                        )
                     logging.info(
-                        "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
-                        metrics["seed_nodes"],
+                        "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                        metrics["start_nodes"],
                         metrics["nodes_seen"],
                         metrics["edges_traversed"],
-                        metrics["max_hops"],
+                        metrics["loops_detected"],
+                        metrics["max_depth"],
                     )
-                logging.info(
-                    "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
-                    metrics["start_nodes"],
-                    metrics["nodes_seen"],
-                    metrics["edges_traversed"],
-                    metrics["loops_detected"],
-                    metrics["max_depth"],
-                )
-                if metrics["start_nodes"] == 0:
-                    logging.warning("No expansion start nodes matched the expression")
+                    if metrics["start_nodes"] == 0:
+                        logging.warning("No expansion start nodes matched the expression")
+            if args.export_path_ids:
+                if not args.expand_from:
+                    logging.error("export-path-ids requires --expand-from")
+                    return 2
+                try:
+                    pairs, metrics = export_path_ids(
+                        roots,
+                        args.export_path_ids,
+                        filter_expr=args.filter_expr,
+                        expand_expr=args.expand_from,
+                        expand_depth=expand_depth,
+                        expand_classes=expand_classes,
+                        neighbor_expr=neighbor_expr,
+                        neighbor_hops=neighbor_hops,
+                    )
+                except ValueError as exc:
+                    logging.error("Invalid filter expression: %s", exc)
+                    return 2
+                logging.info("Wrote path IDs: %s (rows=%s)", args.export_path_ids, len(pairs))
+                if pairs:
+                    preview = ", ".join([path for _, path in pairs[:10]])
+                    logging.info("Path IDs preview (max 10): %s", preview)
+                if metrics:
+                    if "seed_nodes" in metrics:
+                        logging.info(
+                            "Neighbor metrics: seed_nodes=%s nodes_seen=%s edges_traversed=%s max_hops=%s",
+                            metrics["seed_nodes"],
+                            metrics["nodes_seen"],
+                            metrics["edges_traversed"],
+                            metrics["max_hops"],
+                        )
+                    logging.info(
+                        "Expansion metrics: start_nodes=%s nodes_seen=%s edges_traversed=%s loops_detected=%s max_depth=%s",
+                        metrics["start_nodes"],
+                        metrics["nodes_seen"],
+                        metrics["edges_traversed"],
+                        metrics["loops_detected"],
+                        metrics["max_depth"],
+                    )
+                    if metrics["start_nodes"] == 0:
+                        logging.warning("No expansion start nodes matched the expression")
 
         return 0
     except KeyboardInterrupt:

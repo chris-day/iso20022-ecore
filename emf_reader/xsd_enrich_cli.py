@@ -43,6 +43,7 @@ def main(argv: list[str] | None = None) -> int:
             output_path=args.output,
             kind_preferences=prefs,
             trace_name=args.trace_name,
+            verbose=args.verbose,
         )
         logging.info(
             "XSD enrichment complete: annotated=%s missing=%s total=%s",

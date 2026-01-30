@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Tuple
 from lxml import etree
 
 from .export import build_object_graph
+from .loader import _all_features
 from .loader import load_instance, load_metamodel
 
 LOGGER = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ ALLOWED_ECLASSES = {
     "MessageAssociationEnd",
     "MessageAttribute",
     "DataType",
+    "CodeSet",
 }
 
 DEFAULT_KIND_PREFERENCES = {
@@ -38,6 +40,7 @@ DEFAULT_KIND_PREFERENCES = {
     ],
     "simpleType": [
         "DataType",
+        "CodeSet",
     ],
     "element": [
         "MessageElement",
@@ -65,7 +68,35 @@ def _index_model_objects(objects: Iterable[object]) -> Dict[str, List[object]]:
         if not isinstance(name, str) or not name:
             continue
         index.setdefault(name, []).append(obj)
+        xml_tag = getattr(obj, "xmlTag", None)
+        if isinstance(xml_tag, str) and xml_tag:
+            index.setdefault(xml_tag, []).append(obj)
     return index
+
+
+def _find_parent_complex_type(elem: etree._Element) -> str | None:
+    current = elem.getparent()
+    while current is not None:
+        if current.tag == f"{{{XSD_NS}}}complexType":
+            return current.get("name")
+        current = current.getparent()
+    return None
+
+
+def _children_by_xml_tag(parent_obj: object, xml_tag: str) -> list[object]:
+    matches: list[object] = []
+    for ref in _all_features(parent_obj, "eAllContainments"):
+        value = parent_obj.eGet(ref)
+        if value is None:
+            continue
+        items = list(value) if ref.many else [value]
+        for child in items:
+            if child.eClass.name not in {"MessageElement", "MessageAttribute"}:
+                continue
+            tag = getattr(child, "xmlTag", None)
+            if isinstance(tag, str) and tag == xml_tag:
+                matches.append(child)
+    return matches
 
 
 def _pick_candidate(candidates: List[object], preferences: List[str]) -> object | None:
@@ -84,6 +115,26 @@ def _get_xmi_id(obj: object) -> str | None:
     value = getattr(obj, "_internal_id", None)
     if isinstance(value, str) and value:
         return value
+    return None
+
+
+def _message_definition_identifier(obj: object) -> str | None:
+    if obj.eClass.name != "MessageDefinitionIdentifier":
+        return None
+    business_area = getattr(obj, "businessArea", None)
+    message_functionality = getattr(obj, "messageFunctionality", None)
+    flavour = getattr(obj, "flavour", None)
+    version = getattr(obj, "version", None)
+    parts = [business_area, message_functionality, flavour, version]
+    if all(isinstance(p, str) and p for p in parts):
+        return ".".join(parts)
+    return None
+
+
+def _target_namespace_identifier(target_namespace: str) -> str | None:
+    prefix = "urn:iso:std:iso:20022:tech:xsd:"
+    if target_namespace.startswith(prefix):
+        return target_namespace[len(prefix) :]
     return None
 
 
@@ -109,6 +160,7 @@ def enrich_xsd(
     output_path: str,
     kind_preferences: Dict[str, List[str]] | None = None,
     trace_name: str | None = None,
+    verbose: bool = False,
 ) -> Dict[str, int]:
     rset, _ = load_metamodel(ecore_path)
     instance_resource = load_instance(instance_path, rset)
@@ -123,6 +175,53 @@ def enrich_xsd(
 
     tree = etree.parse(xsd_path)
     root = tree.getroot()
+    target_namespace = root.get("targetNamespace")
+
+    matched_identifier = None
+    identifier_obj = None
+    if target_namespace:
+        target_id = _target_namespace_identifier(target_namespace)
+        if target_id:
+            for obj in model_objects:
+                ident = _message_definition_identifier(obj)
+                if ident and ident == target_id:
+                    matched_identifier = ident
+                    identifier_obj = obj
+                    break
+
+    if matched_identifier and identifier_obj:
+        _ensure_annotation(root, "messageDefinitionIdentifier", matched_identifier)
+        _ensure_annotation(root, "businessArea", identifier_obj.businessArea)
+        _ensure_annotation(root, "messageFunctionality", identifier_obj.messageFunctionality)
+        _ensure_annotation(root, "flavour", identifier_obj.flavour)
+        _ensure_annotation(root, "version", identifier_obj.version)
+        md = getattr(identifier_obj, "eContainer", lambda: None)()
+        if md is not None:
+            md_id = _get_xmi_id(md)
+            if md_id:
+                _ensure_annotation(root, "messageDefinition", md_id)
+
+    def _belongs_to_message_definition(obj: object) -> bool:
+        if not matched_identifier:
+            return True
+        current = obj
+        while current is not None:
+            if current.eClass.name == "MessageDefinition":
+                mdi = getattr(current, "messageDefinitionIdentifier", None)
+                ident = _message_definition_identifier(mdi) if mdi is not None else None
+                return ident == matched_identifier
+            current = getattr(current, "eContainer", lambda: None)()
+        return False
+
+    def _scope_candidates(cands: list[object]) -> list[object]:
+        scoped = []
+        for c in cands:
+            if c.eClass.name in {"MessageBuildingBlock", "MessageElement"}:
+                if _belongs_to_message_definition(c):
+                    scoped.append(c)
+            else:
+                scoped.append(c)
+        return scoped
 
     stats = {
         "annotated": 0,
@@ -137,15 +236,27 @@ def enrich_xsd(
                 continue
             stats["total"] += 1
             lookup_name = _normalize_xsd_name(name)
-            candidates = index.get(lookup_name, [])
+            candidates = []
+            if kind == "element":
+                parent_name = _find_parent_complex_type(elem)
+                if parent_name:
+                    parent_candidates = _scope_candidates(index.get(parent_name, []))
+                    parent = _pick_candidate(parent_candidates, ["MessageComponent", "MessageComponentType", "ChoiceComponent"])
+                    if parent is not None:
+                        candidates = _children_by_xml_tag(parent, lookup_name)
+            if not candidates:
+                candidates = _scope_candidates(index.get(lookup_name, []))
             if not candidates and kind == "element":
                 type_name = elem.get("type")
                 if type_name:
                     if ":" in type_name:
                         type_name = type_name.split(":", 1)[1]
                     type_lookup = _normalize_xsd_name(type_name)
-                    candidates = index.get(type_lookup, [])
-            picked = _pick_candidate(candidates, prefs.get(kind, []))
+                    candidates = _scope_candidates(index.get(type_lookup, []))
+            pref_list = prefs.get(kind, [])
+            if lookup_name.endswith("Code"):
+                pref_list = ["CodeSet"] + [p for p in pref_list if p != "CodeSet"]
+            picked = _pick_candidate(candidates, pref_list)
             if trace_name and lookup_name == trace_name:
                 LOGGER.info(
                     "trace-name=%s kind=%s candidates=%s picked=%s",
@@ -156,12 +267,19 @@ def enrich_xsd(
                 )
             if picked is None:
                 stats["missing"] += 1
+                if verbose:
+                    LOGGER.info("xsd=%s kind=%s status=missing", lookup_name, kind)
                 continue
             xmi_id = _get_xmi_id(picked)
             if not xmi_id:
                 stats["missing"] += 1
+                if verbose:
+                    LOGGER.info("xsd=%s kind=%s status=missing (no xmi:id)", lookup_name, kind)
                 continue
             _ensure_annotation(elem, "xmi:id", xmi_id)
+            definition = getattr(picked, "definition", None)
+            if isinstance(definition, str) and definition:
+                _ensure_annotation(elem, "definition", definition)
             parent = getattr(picked, "eContainer", lambda: None)()
             if parent is not None:
                 parent_id = _get_xmi_id(parent)
@@ -173,6 +291,8 @@ def enrich_xsd(
                 if parent_value:
                     _ensure_annotation(elem, "parent", parent_value)
             stats["annotated"] += 1
+            if verbose:
+                LOGGER.info("xsd=%s kind=%s status=annotated", lookup_name, kind)
 
     out_path = Path(output_path)
     out_path.write_bytes(
