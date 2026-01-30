@@ -59,10 +59,19 @@ def _normalize_xsd_name(name: str) -> str:
     return name
 
 
+def _is_allowed(obj: object) -> bool:
+    if obj.eClass.name in ALLOWED_ECLASSES:
+        return True
+    for sup in obj.eClass.eAllSuperTypes():
+        if sup.name in {"DataType", "CodeSet"}:
+            return True
+    return False
+
+
 def _index_model_objects(objects: Iterable[object]) -> Dict[str, List[object]]:
     index: Dict[str, List[object]] = {}
     for obj in objects:
-        if obj.eClass.name not in ALLOWED_ECLASSES:
+        if not _is_allowed(obj):
             continue
         name = getattr(obj, "name", None)
         if not isinstance(name, str) or not name:
@@ -268,13 +277,13 @@ def enrich_xsd(
             if picked is None:
                 stats["missing"] += 1
                 if verbose:
-                    LOGGER.info("xsd=%s kind=%s status=missing", lookup_name, kind)
+                    LOGGER.warning("xsd=%s kind=%s status=missing", lookup_name, kind)
                 continue
             xmi_id = _get_xmi_id(picked)
             if not xmi_id:
                 stats["missing"] += 1
                 if verbose:
-                    LOGGER.info("xsd=%s kind=%s status=missing (no xmi:id)", lookup_name, kind)
+                    LOGGER.warning("xsd=%s kind=%s status=missing (no xmi:id)", lookup_name, kind)
                 continue
             _ensure_annotation(elem, "xmi:id", xmi_id)
             definition = getattr(picked, "definition", None)
