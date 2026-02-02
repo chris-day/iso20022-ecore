@@ -11,6 +11,9 @@ from .export import (
     export_filtered_instance,
     export_gml,
     export_json,
+    export_metamodel_gml,
+    export_metamodel_mermaid,
+    export_metamodel_plantuml,
     export_mermaid,
     export_path_ids,
     export_paths,
@@ -74,6 +77,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--instance", help="Path to instance file (.xmi/.xml/.iso20022)")
     parser.add_argument("--dump-metamodel", action="store_true", help="Print metamodel summary")
     parser.add_argument("--dump-metamodel-json", help="Write metamodel summary to JSON")
+    parser.add_argument("--export-metamodel-mermaid", help="Export metamodel graph to Mermaid")
+    parser.add_argument("--export-metamodel-plantuml", help="Export metamodel graph to PlantUML")
+    parser.add_argument("--export-metamodel-gml", help="Export metamodel graph to GML")
+    parser.add_argument(
+        "--metamodel-include-references",
+        action="store_true",
+        help="Include non-containment references in metamodel graphs",
+    )
     parser.add_argument("--dump-model", action="store_true", help="Print model summary")
     parser.add_argument("--dump-model-json", help="Write model summary to JSON")
     parser.add_argument("--dump-instances", action="store_true", help="Print instance summary")
@@ -151,6 +162,42 @@ def main(argv: list[str] | None = None) -> int:
             with open(args.dump_metamodel_json, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, indent=2)
             logging.info("Wrote metamodel JSON: %s", args.dump_metamodel_json)
+        if args.export_metamodel_mermaid:
+            stats = export_metamodel_mermaid(
+                packages,
+                args.export_metamodel_mermaid,
+                include_references=args.metamodel_include_references,
+            )
+            logging.info(
+                "Wrote metamodel Mermaid: %s (nodes=%s edges=%s)",
+                args.export_metamodel_mermaid,
+                stats["nodes"],
+                stats["edges"],
+            )
+        if args.export_metamodel_plantuml:
+            stats = export_metamodel_plantuml(
+                packages,
+                args.export_metamodel_plantuml,
+                include_references=args.metamodel_include_references,
+            )
+            logging.info(
+                "Wrote metamodel PlantUML: %s (nodes=%s edges=%s)",
+                args.export_metamodel_plantuml,
+                stats["nodes"],
+                stats["edges"],
+            )
+        if args.export_metamodel_gml:
+            stats = export_metamodel_gml(
+                packages,
+                args.export_metamodel_gml,
+                include_references=args.metamodel_include_references,
+            )
+            logging.info(
+                "Wrote metamodel GML: %s (nodes=%s edges=%s)",
+                args.export_metamodel_gml,
+                stats["nodes"],
+                stats["edges"],
+            )
 
         needs_instance = (
             args.dump_instances

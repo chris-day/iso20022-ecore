@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.88
+Version: 0.1.89
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -16,7 +16,8 @@ python -m pip install -e .
 
 ```bash
 emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel-json <path>] \
-  [--dump-instances] [--dump-instances-json <path>] [--dump-instances-filter <expr>] \
+  [--export-metamodel-mermaid <path>] [--export-metamodel-plantuml <path>] [--export-metamodel-gml <path>] \
+  [--metamodel-include-references] [--dump-instances] [--dump-instances-json <path>] [--dump-instances-filter <expr>] \
   [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--export-mermaid <path>] [--export-plantuml <path>] [--export-gml <path>] \
@@ -35,6 +36,12 @@ Dump metamodel summary (no instance required):
 
 ```bash
 emf-read --ecore /var/software/input/ISO20022.ecore --dump-metamodel
+```
+
+Export metamodel graph (inheritance + containment references):
+
+```bash
+emf-read --ecore /var/software/input/ISO20022.ecore --export-metamodel-mermaid /tmp/iso20022_metamodel.mmd
 ```
 
 Dump metamodel to JSON:

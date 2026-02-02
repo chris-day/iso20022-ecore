@@ -117,6 +117,129 @@ def _iter_values(value: object) -> List[EObject]:
     return []
 
 
+def _collect_metamodel_classes(packages: Iterable[object]) -> List[object]:
+    classes: List[object] = []
+    for pkg in packages:
+        for classifier in getattr(pkg, "eClassifiers", []):
+            if getattr(classifier, "eClass", None) is not None and classifier.eClass.name == "EClass":
+                classes.append(classifier)
+    return classes
+
+
+def export_metamodel_mermaid(
+    packages: Iterable[object],
+    output_path: str,
+    include_references: bool = False,
+) -> dict[str, int]:
+    classes = _collect_metamodel_classes(packages)
+    class_set = set(classes)
+    node_ids = {cls: idx for idx, cls in enumerate(classes)}
+    lines = ["graph TD"]
+    edge_count = 0
+
+    for cls in classes:
+        label = getattr(cls, "name", "")
+        lines.append(f"  n{node_ids[cls]}[\"{label}\"]")
+
+    for cls in classes:
+        for super_cls in getattr(cls, "eSuperTypes", []):
+            if super_cls in class_set:
+                lines.append(f"  n{node_ids[super_cls]} --> n{node_ids[cls]}")
+                edge_count += 1
+        for ref in _all_features(cls, "eAllReferences"):
+            target = getattr(ref, "eType", None)
+            if target not in class_set:
+                continue
+            if getattr(ref, "containment", False) or include_references:
+                lines.append(f"  n{node_ids[cls]} --> n{node_ids[target]}")
+                edge_count += 1
+
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+        handle.write("\n")
+
+    return {"nodes": len(classes), "edges": edge_count}
+
+
+def export_metamodel_plantuml(
+    packages: Iterable[object],
+    output_path: str,
+    include_references: bool = False,
+) -> dict[str, int]:
+    classes = _collect_metamodel_classes(packages)
+    class_set = set(classes)
+    lines = ["@startuml"]
+    edge_count = 0
+
+    for cls in classes:
+        label = getattr(cls, "name", "")
+        lines.append(f"class \"{label}\" as {label}")
+
+    for cls in classes:
+        for super_cls in getattr(cls, "eSuperTypes", []):
+            if super_cls in class_set:
+                lines.append(f"{getattr(super_cls, 'name', '')} <|-- {getattr(cls, 'name', '')}")
+                edge_count += 1
+        for ref in _all_features(cls, "eAllReferences"):
+            target = getattr(ref, "eType", None)
+            if target not in class_set:
+                continue
+            if getattr(ref, "containment", False) or include_references:
+                lines.append(f"{getattr(cls, 'name', '')} *-- {getattr(target, 'name', '')}")
+                edge_count += 1
+
+    lines.append("@enduml")
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+        handle.write("\n")
+
+    return {"nodes": len(classes), "edges": edge_count}
+
+
+def export_metamodel_gml(
+    packages: Iterable[object],
+    output_path: str,
+    include_references: bool = False,
+) -> dict[str, int]:
+    classes = _collect_metamodel_classes(packages)
+    class_set = set(classes)
+    node_ids = {cls: idx for idx, cls in enumerate(classes)}
+    lines = ["graph [", "  directed 1"]
+    edge_count = 0
+
+    for cls in classes:
+        label = getattr(cls, "name", "")
+        lines.append("  node [")
+        lines.append(f"    id {node_ids[cls]}")
+        lines.append(f"    label \"{label}\"")
+        lines.append("  ]")
+
+    for cls in classes:
+        for super_cls in getattr(cls, "eSuperTypes", []):
+            if super_cls in class_set:
+                lines.append("  edge [")
+                lines.append(f"    source {node_ids[super_cls]}")
+                lines.append(f"    target {node_ids[cls]}")
+                lines.append("  ]")
+                edge_count += 1
+        for ref in _all_features(cls, "eAllReferences"):
+            target = getattr(ref, "eType", None)
+            if target not in class_set:
+                continue
+            if getattr(ref, "containment", False) or include_references:
+                lines.append("  edge [")
+                lines.append(f"    source {node_ids[cls]}")
+                lines.append(f"    target {node_ids[target]}")
+                lines.append("  ]")
+                edge_count += 1
+
+    lines.append("]")
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+        handle.write("\n")
+
+    return {"nodes": len(classes), "edges": edge_count}
+
 def preview_prune_metamodel(
     packages: Iterable[object],
     include_classes: set[str] | None = None,
