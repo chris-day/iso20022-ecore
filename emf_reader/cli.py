@@ -15,6 +15,7 @@ from .export import (
     export_path_ids,
     export_paths,
     export_plantuml,
+    preview_prune_metamodel,
     model_dump,
     summarize_model,
 )
@@ -35,6 +36,38 @@ def _configure_logging(verbose: bool) -> None:
     logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
 
+def _log_prune_summary(stats: dict[str, object]) -> None:
+    logging.info(
+        "Prune dry-run: scope=%s total=%s selected=%s pruned=%s roots=%s",
+        stats.get("scope", "instance"),
+        stats.get("total_objects", stats.get("total_classes")),
+        stats.get("selected_objects", len(stats.get("selected_classes", {}))),
+        stats.get("pruned_objects", len(stats.get("pruned_classes", {}))),
+        stats.get("roots", "n/a"),
+    )
+    logging.info(
+        "Pruned containment edges=%s references=%s",
+        stats.get("pruned_containment_edges"),
+        stats.get("pruned_reference_edges"),
+    )
+    pruned_classes = stats.get("pruned_classes", {})
+    if isinstance(pruned_classes, dict) and pruned_classes:
+        logging.info("Pruned classes:")
+        for name in sorted(pruned_classes):
+            logging.info("  %s: %s", name, pruned_classes[name])
+    pruned_names = stats.get("pruned_class_names", [])
+    if isinstance(pruned_names, list) and pruned_names:
+        logging.info("Pruned class names:")
+        for name in pruned_names:
+            logging.info("  %s", name)
+    pruned_containment = stats.get("pruned_containment_features", {})
+    if isinstance(pruned_containment, dict) and pruned_containment:
+        logging.info("Pruned containment by feature: %s", pruned_containment)
+    pruned_refs = stats.get("pruned_reference_features", {})
+    if isinstance(pruned_refs, dict) and pruned_refs:
+        logging.info("Pruned references by feature: %s", pruned_refs)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Read EMF .ecore metamodels and instance files.")
     parser.add_argument("--ecore", required=True, help="Path to .ecore file")
@@ -52,6 +85,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--export-instance", help="Export filtered instance resource to XMI")
     parser.add_argument("--include-classes", help="Comma-separated EClass names to include")
     parser.add_argument("--exclude-classes", help="Comma-separated EClass names to exclude")
+    parser.add_argument(
+        "--prune-dry-run",
+        action="store_true",
+        help="Preview pruning results without writing an instance file",
+    )
+    parser.add_argument(
+        "--prune-dry-run-json",
+        help="Write pruning dry-run summary to JSON",
+    )
     parser.add_argument("--neighbors-from", help="Seed filter expression for neighborhood expansion")
     parser.add_argument("--neighbors", type=int, help="Neighborhood hops for expansion")
     parser.add_argument("--export-json", help="Export loaded objects to JSON")
@@ -110,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
                 json.dump(payload, handle, indent=2)
             logging.info("Wrote metamodel JSON: %s", args.dump_metamodel_json)
 
-        if (
+        needs_instance = (
             args.dump_instances
             or args.dump_model
             or args.dump_model_json
@@ -123,19 +165,22 @@ def main(argv: list[str] | None = None) -> int:
             or args.export_plantuml
             or args.export_gml
             or args.export_instance
-        ):
-            if not args.instance:
+        )
+        if needs_instance or args.prune_dry_run or args.prune_dry_run_json:
+            if not args.instance and needs_instance:
                 logging.error("Instance file required for instance operations")
                 return 2
             try:
-                instance_resource = load_instance(args.instance, rset)
+                instance_resource = load_instance(args.instance, rset) if args.instance else None
             except Exception as exc:  # noqa: BLE001
                 logging.error("Failed to load instance: %s", exc)
                 return 2
-            instats = instance_stats([instance_resource])
-            logging.info("Instance stats: roots=%s", instats["roots"])
-
-            roots = list(instance_resource.contents)
+            if instance_resource is not None:
+                instats = instance_stats([instance_resource])
+                logging.info("Instance stats: roots=%s", instats["roots"])
+                roots = list(instance_resource.contents)
+            else:
+                roots = []
             if args.dump_instances:
                 print(summarize_instances([instance_resource]))
             if args.dump_model:
@@ -166,6 +211,26 @@ def main(argv: list[str] | None = None) -> int:
                 include_classes = {name.strip() for name in args.include_classes.split(",") if name.strip()}
             if args.exclude_classes:
                 exclude_classes = {name.strip() for name in args.exclude_classes.split(",") if name.strip()}
+            if args.prune_dry_run or args.prune_dry_run_json:
+                if instance_resource is None:
+                    stats = preview_prune_metamodel(
+                        packages,
+                        include_classes=include_classes,
+                        exclude_classes=exclude_classes,
+                    )
+                else:
+                    stats = export_filtered_instance(
+                        instance_resource,
+                        args.export_instance or "",
+                        include_classes=include_classes,
+                        exclude_classes=exclude_classes,
+                        dry_run=True,
+                    )
+                _log_prune_summary(stats)
+                if args.prune_dry_run_json:
+                    with open(args.prune_dry_run_json, "w", encoding="utf-8") as handle:
+                        json.dump(stats, handle, indent=2)
+                    logging.info("Wrote prune dry-run JSON: %s", args.prune_dry_run_json)
             if args.export_mermaid:
                 try:
                     stats = export_mermaid(

@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.81
+Version: 0.1.88
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -21,6 +21,7 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--export-mermaid <path>] [--export-plantuml <path>] [--export-gml <path>] \
   [--export-instance <path>] [--include-classes <list>] [--exclude-classes <list>] \
+  [--prune-dry-run] [--prune-dry-run-json <path>] \
   [--neighbors-from <expr>] [--neighbors <n>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
@@ -114,6 +115,17 @@ emf-read \
   --export-instance /tmp/filtered.iso20022 \
   --include-classes BusinessComponent,BusinessAssociationEnd \
   --exclude-classes BusinessProcess
+```
+
+Preview pruning impact without writing an instance file:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --include-classes BusinessComponent,BusinessAssociationEnd \
+  --exclude-classes BusinessProcess \
+  --prune-dry-run \
+  --prune-dry-run-json /tmp/prune_preview.json
 ```
 
 Enrich an XSD with xmi:id annotations:

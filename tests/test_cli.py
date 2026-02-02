@@ -47,6 +47,22 @@ def test_cli_dump_model_json(tmp_path):
     assert out.stat().st_size > 0
 
 
+def test_cli_prune_dry_run_json(tmp_path):
+    _skip_if_missing(ECORE)
+    out = tmp_path / "prune_preview.json"
+    code = emf_cli.main([
+        "--ecore",
+        ECORE,
+        "--include-classes",
+        "BusinessComponent",
+        "--prune-dry-run-json",
+        str(out),
+    ])
+    assert code == 0
+    assert out.exists()
+    assert out.stat().st_size > 0
+
+
 def test_xsd_enrich_trace(tmp_path):
     _skip_if_missing(ECORE, INSTANCE, XSD)
     out = tmp_path / "enriched.xsd"

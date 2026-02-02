@@ -117,6 +117,75 @@ def _iter_values(value: object) -> List[EObject]:
     return []
 
 
+def preview_prune_metamodel(
+    packages: Iterable[object],
+    include_classes: set[str] | None = None,
+    exclude_classes: set[str] | None = None,
+) -> dict[str, object]:
+    include_classes = include_classes or set()
+    exclude_classes = exclude_classes or set()
+    all_classes: List[object] = []
+    for pkg in packages:
+        for classifier in getattr(pkg, "eClassifiers", []):
+            if getattr(classifier, "eClass", None) is not None and classifier.eClass.name == "EClass":
+                all_classes.append(classifier)
+
+    selected_classes: set[object] = set()
+    for cls in all_classes:
+        name = getattr(cls, "name", "")
+        if include_classes and name not in include_classes:
+            continue
+        if exclude_classes and name in exclude_classes:
+            continue
+        selected_classes.add(cls)
+
+    pruned_classes = set(all_classes) - selected_classes
+
+    containment_edges = 0
+    containment_by_feature: Dict[str, int] = {}
+    reference_edges = 0
+    reference_by_feature: Dict[str, int] = {}
+    for cls in selected_classes:
+        for ref in _all_features(cls, "eAllReferences"):
+            target = getattr(ref, "eType", None)
+            if target in pruned_classes:
+                if getattr(ref, "containment", False):
+                    containment_edges += 1
+                    containment_by_feature[ref.name] = containment_by_feature.get(ref.name, 0) + 1
+                else:
+                    reference_edges += 1
+                    reference_by_feature[ref.name] = reference_by_feature.get(ref.name, 0) + 1
+
+    def _class_counts(classes: Iterable[object]) -> Dict[str, int]:
+        counts: Dict[str, int] = {}
+        for cls in classes:
+            name = getattr(cls, "name", None)
+            if not name:
+                continue
+            counts[name] = counts.get(name, 0) + 1
+        return dict(sorted(counts.items()))
+
+    def _class_names(classes: Iterable[object]) -> List[str]:
+        names = []
+        for cls in classes:
+            name = getattr(cls, "name", None)
+            if name:
+                names.append(name)
+        return sorted(set(names))
+
+    return {
+        "scope": "metamodel",
+        "total_classes": len(all_classes),
+        "selected_classes": _class_counts(selected_classes),
+        "pruned_classes": _class_counts(pruned_classes),
+        "pruned_class_names": _class_names(pruned_classes),
+        "pruned_containment_edges": containment_edges,
+        "pruned_containment_features": dict(sorted(containment_by_feature.items())),
+        "pruned_reference_edges": reference_edges,
+        "pruned_reference_features": dict(sorted(reference_by_feature.items())),
+    }
+
+
 def _reference_ids(obj: EObject, ref, id_map: Dict[EObject, str]) -> List[str]:
     value = obj.eGet(ref)
     values = _iter_values(value)
@@ -886,12 +955,11 @@ def export_gml(
     return result
 
 
-def export_filtered_instance(
+def _select_objects(
     instance_resource: XMIResource,
-    output_path: str,
-    include_classes: set[str] | None = None,
-    exclude_classes: set[str] | None = None,
-) -> dict[str, int]:
+    include_classes: set[str] | None,
+    exclude_classes: set[str] | None,
+) -> tuple[list[EObject], set[EObject]]:
     objects, _ = build_object_graph(instance_resource.contents)
     include_classes = include_classes or set()
     exclude_classes = exclude_classes or set()
@@ -903,6 +971,83 @@ def export_filtered_instance(
         if exclude_classes and cls_name in exclude_classes:
             continue
         selected.add(info.obj)
+    return [info.obj for info in objects], selected
+
+
+def preview_filtered_instance(
+    instance_resource: XMIResource,
+    include_classes: set[str] | None = None,
+    exclude_classes: set[str] | None = None,
+) -> dict[str, object]:
+    all_objects, selected = _select_objects(instance_resource, include_classes, exclude_classes)
+    selected_set = set(selected)
+    pruned_set = set(all_objects) - selected_set
+
+    def _class_counts(objs: Iterable[EObject]) -> Dict[str, int]:
+        counts: Dict[str, int] = {}
+        for obj in objs:
+            name = obj.eClass.name
+            counts[name] = counts.get(name, 0) + 1
+        return dict(sorted(counts.items()))
+
+    def _class_names(objs: Iterable[EObject]) -> List[str]:
+        names = {obj.eClass.name for obj in objs}
+        return sorted(names)
+
+    containment_edges = 0
+    containment_by_feature: Dict[str, int] = {}
+    reference_edges = 0
+    reference_by_feature: Dict[str, int] = {}
+    for obj in selected_set:
+        for ref in _containment_features(obj):
+            value = obj.eGet(ref)
+            for target in _iter_values(value):
+                if target in pruned_set:
+                    containment_edges += 1
+                    containment_by_feature[ref.name] = containment_by_feature.get(ref.name, 0) + 1
+        for ref in _all_features(obj, "eAllReferences"):
+            if getattr(ref, "containment", False):
+                continue
+            value = obj.eGet(ref)
+            for target in _iter_values(value):
+                if target in pruned_set:
+                    reference_edges += 1
+                    reference_by_feature[ref.name] = reference_by_feature.get(ref.name, 0) + 1
+
+    roots = [obj for obj in selected_set if obj.eContainer() not in selected_set]
+
+    return {
+        "total_objects": len(all_objects),
+        "selected_objects": len(selected_set),
+        "pruned_objects": len(pruned_set),
+        "selected_classes": _class_counts(selected_set),
+        "pruned_classes": _class_counts(pruned_set),
+        "pruned_class_names": _class_names(pruned_set),
+        "pruned_containment_edges": containment_edges,
+        "pruned_containment_features": dict(sorted(containment_by_feature.items())),
+        "pruned_reference_edges": reference_edges,
+        "pruned_reference_features": dict(sorted(reference_by_feature.items())),
+        "roots": len(roots),
+    }
+
+
+def export_filtered_instance(
+    instance_resource: XMIResource,
+    output_path: str,
+    include_classes: set[str] | None = None,
+    exclude_classes: set[str] | None = None,
+    dry_run: bool = False,
+) -> dict[str, object]:
+    all_objects, selected = _select_objects(instance_resource, include_classes, exclude_classes)
+    selected_set = set(selected)
+
+    stats = preview_filtered_instance(
+        instance_resource,
+        include_classes=include_classes,
+        exclude_classes=exclude_classes,
+    )
+    if dry_run:
+        return stats
 
     rset = instance_resource.resource_set
     if rset is None:
@@ -912,10 +1057,11 @@ def export_filtered_instance(
     rset.resource_factory[None] = XMIResource
     out_res = rset.create_resource(URI(output_path))
 
-    roots = [obj for obj in selected if obj.eContainer() not in selected]
+    roots = [obj for obj in selected_set if obj.eContainer() not in selected_set]
     for obj in roots:
         out_res.append(obj)
 
     out_res.save()
 
-    return {"selected": len(selected), "roots": len(roots)}
+    stats.update({"selected": len(selected_set), "roots": len(roots)})
+    return stats
