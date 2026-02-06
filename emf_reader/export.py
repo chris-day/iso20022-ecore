@@ -1160,6 +1160,7 @@ def export_filtered_instance(
     include_classes: set[str] | None = None,
     exclude_classes: set[str] | None = None,
     dry_run: bool = False,
+    strip_pruned_references: bool = False,
 ) -> dict[str, object]:
     all_objects, selected = _select_objects(instance_resource, include_classes, exclude_classes)
     selected_set = set(selected)
@@ -1181,10 +1182,33 @@ def export_filtered_instance(
     out_res = rset.create_resource(URI(output_path))
 
     roots = [obj for obj in selected_set if obj.eContainer() not in selected_set]
+
+    original_values: List[tuple[EObject, object, object]] = []
+    if strip_pruned_references:
+        pruned_set = set(all_objects) - selected_set
+        for obj in selected_set:
+            for ref in _all_features(obj, "eAllReferences"):
+                value = obj.eGet(ref)
+                if value is None:
+                    continue
+                if ref.many:
+                    kept = [v for v in _iter_values(value) if v not in pruned_set]
+                    if len(kept) != len(list(_iter_values(value))):
+                        original_values.append((obj, ref, value))
+                        obj.eSet(ref, kept)
+                else:
+                    if value in pruned_set:
+                        original_values.append((obj, ref, value))
+                        obj.eSet(ref, None)
+
     for obj in roots:
         out_res.append(obj)
 
     out_res.save()
+
+    if original_values:
+        for obj, ref, value in original_values:
+            obj.eSet(ref, value)
 
     stats.update({"selected": len(selected_set), "roots": len(roots)})
     return stats

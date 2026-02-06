@@ -97,6 +97,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--include-classes", help="Comma-separated EClass names to include")
     parser.add_argument("--exclude-classes", help="Comma-separated EClass names to exclude")
     parser.add_argument(
+        "--prune-strip-refs",
+        action="store_true",
+        help="Remove references to pruned classes in exported instance",
+    )
+    parser.add_argument(
         "--prune-dry-run",
         action="store_true",
         help="Preview pruning results without writing an instance file",
@@ -310,6 +315,7 @@ def main(argv: list[str] | None = None) -> int:
                     args.export_instance,
                     include_classes=include_classes,
                     exclude_classes=exclude_classes,
+                    strip_pruned_references=args.prune_strip_refs,
                 )
                 logging.info(
                     "Wrote instance XMI: %s (selected=%s roots=%s)",
