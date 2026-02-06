@@ -1180,8 +1180,15 @@ def export_filtered_instance(
     rset.resource_factory["xml"] = XMIResource
     rset.resource_factory[None] = XMIResource
     out_res = rset.create_resource(URI(output_path))
+    out_res.use_uuid = True
 
     roots = [obj for obj in selected_set if obj.eContainer() not in selected_set]
+
+    if hasattr(instance_resource, "get_id"):
+        for obj in selected_set:
+            obj_id = instance_resource.get_id(obj)
+            if obj_id:
+                obj._internal_id = obj_id
 
     original_values: List[tuple[EObject, object, object]] = []
     if strip_pruned_references:
