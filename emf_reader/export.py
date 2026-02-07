@@ -7,7 +7,7 @@ from typing import Dict, Iterable, List, Tuple
 
 from pyecore.ecore import EObject
 from pyecore.resources import URI
-from pyecore.resources.xmi import XMIResource
+from pyecore.resources.xmi import XMIOptions, XMIResource
 
 from .query import build_context, build_predicate
 from .loader import _configure_resource_set
@@ -116,6 +116,24 @@ def _iter_values(value: object) -> List[EObject]:
             return []
     return []
 
+
+def _resolve_enum_default(etype, default_literal: str):
+    if etype is None:
+        return None
+    literal = None
+    if hasattr(etype, "getEEnumLiteralByLiteral"):
+        literal = etype.getEEnumLiteralByLiteral(default_literal)
+    if literal is None and hasattr(etype, "getEEnumLiteral"):
+        literal = etype.getEEnumLiteral(default_literal)
+    if literal is None and hasattr(etype, "eLiterals"):
+        for lit in etype.eLiterals:
+            if getattr(lit, "literal", None) == default_literal:
+                literal = lit
+                break
+            if getattr(lit, "name", None) == default_literal:
+                literal = lit
+                break
+    return literal
 
 def _collect_metamodel_classes(packages: Iterable[object]) -> List[object]:
     classes: List[object] = []
@@ -244,14 +262,15 @@ def preview_prune_metamodel(
     packages: Iterable[object],
     include_classes: set[str] | None = None,
     exclude_classes: set[str] | None = None,
+    include_supertypes: bool = False,
 ) -> dict[str, object]:
     include_classes = include_classes or set()
     exclude_classes = exclude_classes or set()
-    all_classes: List[object] = []
-    for pkg in packages:
-        for classifier in getattr(pkg, "eClassifiers", []):
-            if getattr(classifier, "eClass", None) is not None and classifier.eClass.name == "EClass":
-                all_classes.append(classifier)
+    all_classes = _collect_metamodel_classes(packages)
+    if include_supertypes and include_classes:
+        class_objs = {cls for cls in all_classes if getattr(cls, "name", None) in include_classes}
+        include_classes = set(include_classes)
+        include_classes.update(_collect_supertypes(class_objs))
 
     selected_classes: set[object] = set()
     for cls in all_classes:
@@ -1078,32 +1097,69 @@ def export_gml(
     return result
 
 
+def _collect_supertypes(classes: Iterable[object]) -> set[str]:
+    names: set[str] = set()
+    for cls in classes:
+        for sup in _all_features(cls, "eAllSuperTypes"):
+            name = getattr(sup, "name", None)
+            if name:
+                names.add(name)
+    return names
+
+
 def _select_objects(
     instance_resource: XMIResource,
     include_classes: set[str] | None,
     exclude_classes: set[str] | None,
-) -> tuple[list[EObject], set[EObject]]:
+    include_supertypes: bool = False,
+) -> tuple[list[EObject], set[EObject], set[str]]:
     objects, _ = build_object_graph(instance_resource.contents)
     include_classes = include_classes or set()
     exclude_classes = exclude_classes or set()
+    expanded_include = set(include_classes)
+    if include_supertypes and include_classes:
+        class_objs = {info.obj.eClass for info in objects if info.obj.eClass.name in include_classes}
+        expanded_include.update(_collect_supertypes(class_objs))
     selected: set[EObject] = set()
     for info in objects:
         cls_name = info.obj.eClass.name
-        if include_classes and cls_name not in include_classes:
+        if expanded_include and cls_name not in expanded_include:
             continue
         if exclude_classes and cls_name in exclude_classes:
             continue
         selected.add(info.obj)
-    return [info.obj for info in objects], selected
+    return [info.obj for info in objects], selected, expanded_include
+
+
+def _add_container_ancestors(selected: set[EObject]) -> set[EObject]:
+    expanded = set(selected)
+    for obj in list(selected):
+        parent = obj.eContainer()
+        while parent is not None and parent not in expanded:
+            expanded.add(parent)
+            parent = parent.eContainer()
+    return expanded
 
 
 def preview_filtered_instance(
     instance_resource: XMIResource,
     include_classes: set[str] | None = None,
     exclude_classes: set[str] | None = None,
+    include_supertypes: bool = False,
+    include_containers: bool = True,
 ) -> dict[str, object]:
-    all_objects, selected = _select_objects(instance_resource, include_classes, exclude_classes)
+    all_objects, selected, expanded_include = _select_objects(
+        instance_resource,
+        include_classes,
+        exclude_classes,
+        include_supertypes=include_supertypes,
+    )
     selected_set = set(selected)
+    added_container_objects: set[EObject] = set()
+    if include_containers:
+        expanded = _add_container_ancestors(selected_set)
+        added_container_objects = expanded - selected_set
+        selected_set = expanded
     pruned_set = set(all_objects) - selected_set
 
     def _class_counts(objs: Iterable[EObject]) -> Dict[str, int]:
@@ -1146,6 +1202,9 @@ def preview_filtered_instance(
         "selected_classes": _class_counts(selected_set),
         "pruned_classes": _class_counts(pruned_set),
         "pruned_class_names": _class_names(pruned_set),
+        "include_classes": sorted(expanded_include),
+        "include_classes_added": sorted(set(expanded_include) - set(include_classes or [])),
+        "container_classes_added": _class_names(added_container_objects),
         "pruned_containment_edges": containment_edges,
         "pruned_containment_features": dict(sorted(containment_by_feature.items())),
         "pruned_reference_edges": reference_edges,
@@ -1161,14 +1220,28 @@ def export_filtered_instance(
     exclude_classes: set[str] | None = None,
     dry_run: bool = False,
     strip_pruned_references: bool = False,
+    include_supertypes: bool = False,
+    serialize_defaults: bool = False,
+    include_containers: bool = True,
+    debug_attrs: bool = False,
+    debug_defaults: bool = False,
 ) -> dict[str, object]:
-    all_objects, selected = _select_objects(instance_resource, include_classes, exclude_classes)
+    all_objects, selected, expanded_include = _select_objects(
+        instance_resource,
+        include_classes,
+        exclude_classes,
+        include_supertypes=include_supertypes,
+    )
     selected_set = set(selected)
+    if include_containers:
+        selected_set = _add_container_ancestors(selected_set)
 
     stats = preview_filtered_instance(
         instance_resource,
         include_classes=include_classes,
         exclude_classes=exclude_classes,
+        include_supertypes=include_supertypes,
+        include_containers=include_containers,
     )
     if dry_run:
         return stats
@@ -1189,6 +1262,102 @@ def export_filtered_instance(
             obj_id = instance_resource.get_id(obj)
             if obj_id:
                 obj._internal_id = obj_id
+
+    debug_remaining = 5
+    enum_to_string: Dict[object, object] = {}
+    if serialize_defaults:
+        for obj in selected_set:
+            if debug_attrs and debug_remaining > 0 and obj.eClass.name == "BusinessComponent":
+                debug_remaining -= 1
+                try:
+                    current = getattr(obj, "registrationStatus", None)
+                except Exception:  # noqa: BLE001
+                    current = None
+                print(
+                    f"DEBUG before defaults: class={obj.eClass.name} name={getattr(obj, 'name', None)} "
+                    f"registrationStatus={current}"
+                )
+            for attr in _all_features(obj, "eAllAttributes"):
+                if attr.derived or attr.transient:
+                    continue
+                if hasattr(attr.eType, "eLiterals"):
+                    etype = attr.eType
+                    if etype not in enum_to_string:
+                        enum_to_string[etype] = getattr(etype, "to_string", None)
+                        etype.to_string = lambda v: v.literal if getattr(v, "literal", None) is not None else ""
+                try:
+                    value = obj.eGet(attr)
+                except Exception:  # noqa: BLE001
+                    continue
+                if attr.many:
+                    try:
+                        if value is None or len(value) == 0:
+                            continue
+                    except Exception:  # noqa: BLE001
+                        continue
+                if value is None:
+                    default_literal = getattr(attr, "defaultValueLiteral", None)
+                    if default_literal in (None, ""):
+                        if hasattr(obj, "_isset") and attr in obj._isset:
+                            obj._isset.discard(attr)
+                        continue
+                    etype = getattr(attr, "eType", None)
+                    try:
+                        debug_resolution = None
+                        enum_literal = _resolve_enum_default(etype, default_literal)
+                        if enum_literal is not None:
+                            value = enum_literal
+                            debug_resolution = enum_literal
+                        elif etype is not None and hasattr(etype, "from_string"):
+                            value = etype.from_string(default_literal)
+                        else:
+                            value = default_literal
+                    except Exception:  # noqa: BLE001
+                        value = default_literal
+                        debug_resolution = value
+                    if debug_defaults:
+                        if hasattr(debug_resolution, "name"):
+                            resolved_text = f"{debug_resolution.name}/{getattr(debug_resolution, 'literal', '')}"
+                        else:
+                            resolved_text = debug_resolution
+                        print(
+                            f"DEBUG default: class={obj.eClass.name} name={getattr(obj, 'name', None)} "
+                            f"attr={attr.name} literal={default_literal} resolved={resolved_text}"
+                        )
+                        if attr.name == "registrationStatus":
+                            resolved_literal = getattr(debug_resolution, "literal", None)
+                            print(
+                                f"DEBUG registrationStatus defaultValueLiteral={default_literal} "
+                                f"resolved_literal={resolved_literal}"
+                            )
+                if value is None:
+                    if hasattr(obj, "_isset") and attr in obj._isset:
+                        obj._isset.discard(attr)
+                    continue
+                obj.eSet(attr, value)
+                if isinstance(value, str) and hasattr(attr.eType, "eLiterals"):
+                    enum_literal = _resolve_enum_default(attr.eType, value)
+                    if enum_literal is not None:
+                        value = enum_literal
+                        obj.eSet(attr, value)
+                if hasattr(obj, "_isset"):
+                    obj._isset.add(attr)
+                if debug_attrs and attr.name == "registrationStatus":
+                    default_literal = getattr(attr, "defaultValueLiteral", None)
+                    print(
+                        f"DEBUG registrationStatus set: class={obj.eClass.name} name={getattr(obj, 'name', None)} "
+                        f"defaultValueLiteral={default_literal} value={value}"
+                    )
+        for obj in selected_set:
+            if not hasattr(obj, "_isset"):
+                continue
+            for attr in list(obj._isset):
+                try:
+                    current = obj.eGet(attr)
+                except Exception:  # noqa: BLE001
+                    current = None
+                if current is None:
+                    obj._isset.discard(attr)
 
     original_values: List[tuple[EObject, object, object]] = []
     if strip_pruned_references:
@@ -1211,7 +1380,16 @@ def export_filtered_instance(
     for obj in roots:
         out_res.append(obj)
 
-    out_res.save()
+    if serialize_defaults:
+        out_res.save(options={XMIOptions.SERIALIZE_DEFAULT_VALUES: True})
+        for etype, original in enum_to_string.items():
+            if original is None:
+                if hasattr(etype, "to_string"):
+                    delattr(etype, "to_string")
+            else:
+                etype.to_string = original
+    else:
+        out_res.save()
 
     if original_values:
         for obj, ref, value in original_values:

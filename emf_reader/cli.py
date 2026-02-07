@@ -63,6 +63,16 @@ def _log_prune_summary(stats: dict[str, object]) -> None:
         logging.info("Pruned class names:")
         for name in pruned_names:
             logging.info("  %s", name)
+    include_added = stats.get("include_classes_added", [])
+    if isinstance(include_added, list) and include_added:
+        logging.info("Added supertypes:")
+        for name in include_added:
+            logging.info("  %s", name)
+    container_added = stats.get("container_classes_added", [])
+    if isinstance(container_added, list) and container_added:
+        logging.info("Added containment classes:")
+        for name in container_added:
+            logging.info("  %s", name)
     pruned_containment = stats.get("pruned_containment_features", {})
     if isinstance(pruned_containment, dict) and pruned_containment:
         logging.info("Pruned containment by feature: %s", pruned_containment)
@@ -97,9 +107,34 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--include-classes", help="Comma-separated EClass names to include")
     parser.add_argument("--exclude-classes", help="Comma-separated EClass names to exclude")
     parser.add_argument(
+        "--prune-include-supertypes",
+        action="store_true",
+        help="Include supertypes of included classes during pruning",
+    )
+    parser.add_argument(
         "--prune-strip-refs",
         action="store_true",
         help="Remove references to pruned classes in exported instance",
+    )
+    parser.add_argument(
+        "--prune-serialize-defaults",
+        action="store_true",
+        help="Serialize default attribute values in pruned instance output",
+    )
+    parser.add_argument(
+        "--prune-debug-attrs",
+        action="store_true",
+        help="Log sample attribute values during pruning",
+    )
+    parser.add_argument(
+        "--prune-debug-defaults",
+        action="store_true",
+        help="Log default enum resolution during pruning",
+    )
+    parser.add_argument(
+        "--prune-no-containers",
+        action="store_true",
+        help="Do not include containment ancestors when pruning",
     )
     parser.add_argument(
         "--prune-dry-run",
@@ -269,6 +304,7 @@ def main(argv: list[str] | None = None) -> int:
                         packages,
                         include_classes=include_classes,
                         exclude_classes=exclude_classes,
+                        include_supertypes=args.prune_include_supertypes,
                     )
                 else:
                     stats = export_filtered_instance(
@@ -277,6 +313,8 @@ def main(argv: list[str] | None = None) -> int:
                         include_classes=include_classes,
                         exclude_classes=exclude_classes,
                         dry_run=True,
+                        include_supertypes=args.prune_include_supertypes,
+                        include_containers=not args.prune_no_containers,
                     )
                 _log_prune_summary(stats)
                 if args.prune_dry_run_json:
@@ -316,6 +354,11 @@ def main(argv: list[str] | None = None) -> int:
                     include_classes=include_classes,
                     exclude_classes=exclude_classes,
                     strip_pruned_references=args.prune_strip_refs,
+                    include_supertypes=args.prune_include_supertypes,
+                    serialize_defaults=args.prune_serialize_defaults,
+                    include_containers=not args.prune_no_containers,
+                    debug_attrs=args.prune_debug_attrs,
+                    debug_defaults=args.prune_debug_defaults,
                 )
                 logging.info(
                     "Wrote instance XMI: %s (selected=%s roots=%s)",
