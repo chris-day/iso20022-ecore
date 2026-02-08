@@ -35,13 +35,12 @@ theme:
 # ----------------------------------------------------------------------------
 # Markdown extensions
 # ----------------------------------------------------------------------------
-#markdown_extensions:
-# - admonition
-# - toc:
-#     permalink: true
-# - pymdownx.superfences
-# - pymdownx.highlight
-
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 # ----------------------------------------------------------------------------
 # Plugins
 # Order matters
@@ -55,11 +54,6 @@ plugins:
   - graph:
       name: title      # use page titles as node labels
       debug: false
-
-  - mermaid2:
-      arguments:
-        theme: forest
-
 # ----------------------------------------------------------------------------
 # Optional CSS (safe to include even if file doesn’t exist yet)
 # ----------------------------------------------------------------------------
