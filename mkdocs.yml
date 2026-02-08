@@ -70,7 +70,7 @@ extra_css:
 # - Do NOT rename pages casually
 # ----------------------------------------------------------------------------
 nav:
-  - Home: Home.md
+  - Home: index.md
 
   - Getting Started:
       - Quick Start: Quick-Start.md
