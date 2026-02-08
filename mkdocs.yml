@@ -83,3 +83,29 @@ extra_css:
 nav:
   - Home: Home.md
 
+  - Getting Started:
+      - Quick Start: Quick-Start.md
+
+  - emf-read:
+      - emf-read CLI: emf-read.md
+      - Filter Language: Filter-Language.md
+      - Query Language Deep Dive: Query-Language-Deep-Dive.md
+      - Exports & Formats: Exports-and-Formats.md
+      - JSON Schemas: JSON-Schemas.md
+      - API Usage: API-Usage.md
+      - Graph Exports: Graph-Exports.md
+      - Path Exports: Path-Exports.md
+      - Pruning & Dry-Run: Pruning-and-Dry-Run.md
+      - Conceptual Pruning Example: Pruning-and-Dry-Run.md#example-conceptual-pruning
+      - Instance Grouping: Instance-Grouping.md
+
+  - xsd-enrich:
+      - xsd-enrich CLI: xsd-enrich.md
+      - XSD Mapping Rules: XSD-Mapping-Rules.md
+
+  - Internals:
+      - Architecture: Architecture.md
+      - Troubleshooting: Troubleshooting.md
+      - FAQ: FAQ.md
+
+
