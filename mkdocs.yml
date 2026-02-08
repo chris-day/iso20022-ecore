@@ -56,9 +56,9 @@ plugins:
       name: title      # use page titles as node labels
       debug: false
 
-  -mermaid2:
-    arguments:
-      theme: forest
+  - mermaid2:
+      arguments:
+        theme: forest
 
 # ----------------------------------------------------------------------------
 # Optional CSS (safe to include even if file doesn’t exist yet)
