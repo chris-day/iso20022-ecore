@@ -1,0 +1,24 @@
+# ISO 20022 Ecore Wiki
+
+- [Home](Home)
+- Getting Started
+  - [Quick Start](Quick-Start)
+- emf-read
+  - [emf-read CLI](emf-read)
+  - [Filter Language](Filter-Language)
+  - [Query Language Deep Dive](Query-Language-Deep-Dive)
+  - [Exports & Formats](Exports-and-Formats)
+  - [JSON Schemas](JSON-Schemas)
+  - [API Usage](API-Usage)
+  - [Graph Exports](Graph-Exports)
+  - [Path Exports](Path-Exports)
+  - [Pruning & Dry-Run](Pruning-and-Dry-Run)
+  - [Conceptual Pruning Example](Pruning-and-Dry-Run#example-conceptual-pruning)
+  - [Instance Grouping](Instance-Grouping)
+- xsd-enrich
+  - [xsd-enrich CLI](xsd-enrich)
+  - [XSD Mapping Rules](XSD-Mapping-Rules)
+- Internals
+  - [Architecture](Architecture)
+  - [Troubleshooting](Troubleshooting)
+  - [FAQ](FAQ)
