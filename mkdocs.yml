@@ -22,23 +22,23 @@ use_directory_urls: false
 # ----------------------------------------------------------------------------
 theme:
   name: material
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.indexes
-    - search.highlight
-    - search.suggest
-    - content.code.copy
+# features:
+#   - navigation.tabs
+#   - navigation.sections
+#   - navigation.indexes
+#   - search.highlight
+#   - search.suggest
+#   - content.code.copy
 
 # ----------------------------------------------------------------------------
 # Markdown extensions
 # ----------------------------------------------------------------------------
-markdown_extensions:
-  - admonition
-  - toc:
-      permalink: true
-  - pymdownx.superfences
-  - pymdownx.highlight
+#markdown_extensions:
+# - admonition
+# - toc:
+#     permalink: true
+# - pymdownx.superfences
+# - pymdownx.highlight
 
 # ----------------------------------------------------------------------------
 # Plugins
@@ -53,17 +53,6 @@ plugins:
   - graph:
       name: title      # use page titles as node labels
       debug: false
-
-  # 3. Revision metadata (governance / audit signal)
-  - git-revision-date-localized:
-      type: iso_date
-      fallback_to_build_date: true
-
-  # 4. Output optimisation
-  - minify:
-      minify_html: true
-      minify_js: true
-      minify_css: true
 
 
 # ----------------------------------------------------------------------------
