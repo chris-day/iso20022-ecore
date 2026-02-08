@@ -2,7 +2,7 @@
 
 Pruning lets you keep or remove classes before exporting a new instance file.
 
-## Example: Conceptual pruning
+## Example Conceptual pruning
 
 This example keeps only conceptual Business* classes and DataType, includes supertypes
 so inherited attributes are retained, and serializes default values (e.g.,
