@@ -7,9 +7,9 @@ Welcome to the ISO 20022 EMF tools wiki. This repository provides:
 
 If you're new, start with:
 
-- [Quick Start](Quick-Start)
-- [emf-read](emf-read)
-- [xsd-enrich](xsd-enrich)
+- [Quick Start](Quick-Start.md)
+- [emf-read](emf-read.md)
+- [xsd-enrich](xsd-enrich.md)
 
 ## What this repo is for
 
@@ -26,19 +26,19 @@ If you're new, start with:
 
 ## Index
 
-- [Quick Start](Quick-Start)
-- [emf-read CLI](emf-read)
-- [xsd-enrich CLI](xsd-enrich)
-- [Filter Language](Filter-Language)
-- [Query Language Deep Dive](Query-Language-Deep-Dive)
-- [JSON Schemas](JSON-Schemas)
-- [API Usage](API-Usage)
-- [Exports & Formats](Exports-and-Formats)
-- [Graph Exports](Graph-Exports)
-- [Path Exports](Path-Exports)
-- [Pruning & Dry-Run](Pruning-and-Dry-Run)
-- [Conceptual Pruning Example](Pruning-and-Dry-Run#example-conceptual-pruning)
-- [Instance Grouping](Instance-Grouping)
-- [Architecture](Architecture)
-- [Troubleshooting](Troubleshooting)
-- [FAQ](FAQ)
+- [Quick Start](Quick-Start.md)
+- [emf-read CLI](emf-read.md)
+- [xsd-enrich CLI](xsd-enrich.md)
+- [Filter Language](Filter-Language.md)
+- [Query Language Deep Dive](Query-Language-Deep-Dive.md)
+- [JSON Schemas](JSON-Schemas.md)
+- [API Usage](API-Usage.md)
+- [Exports & Formats](Exports-and-Formats.md)
+- [Graph Exports](Graph-Exports.md)
+- [Path Exports](Path-Exports.md)
+- [Pruning & Dry-Run](Pruning-and-Dry-Run.md)
+- [Conceptual Pruning Example](Pruning-and-Dry-Run.md#example-conceptual-pruning)
+- [Instance Grouping](Instance-Grouping.md)
+- [Architecture](Architecture.md)
+- [Troubleshooting](Troubleshooting.md)
+- [FAQ](FAQ.md)

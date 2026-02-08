@@ -81,7 +81,7 @@ emf-read \
 
 ## Related
 
-- [Filter Language](Filter-Language)
-- [Exports & Formats](Exports-and-Formats)
-- [Pruning & Dry-Run](Pruning-and-Dry-Run)
-- [Conceptual Pruning Example](Pruning-and-Dry-Run#example-conceptual-pruning)
+- [Filter Language](Filter-Language.md)
+- [Exports & Formats](Exports-and-Formats.md)
+- [Pruning & Dry-Run](Pruning-and-Dry-Run.md)
+- [Conceptual Pruning Example](Pruning-and-Dry-Run.md#example-conceptual-pruning)

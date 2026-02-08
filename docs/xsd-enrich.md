@@ -41,4 +41,4 @@ xsd-enrich \
 
 ## Mapping rules
 
-See [XSD Mapping Rules](XSD-Mapping-Rules).
+See [XSD Mapping Rules](XSD-Mapping-Rules.md).
