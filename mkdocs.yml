@@ -94,7 +94,7 @@ nav:
       - Graph Exports: Graph-Exports.md
       - Path Exports: Path-Exports.md
       - Pruning & Dry-Run: Pruning-and-Dry-Run.md
-      - Conceptual Pruning Example: Pruning-and-Dry-Run.md#example-conceptual-pruning
+      - Conceptual Pruning Example: Pruning-and-Dry-Run.md#Example-conceptual-pruning
       - Instance Grouping: Instance-Grouping.md
 
   - xsd-enrich:
