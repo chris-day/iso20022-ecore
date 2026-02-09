@@ -5,8 +5,8 @@
 # Purpose : Build Wiki-compatible documentation with search + network graph
 # ============================================================================
 
-site_name: Documentation
-site_description: Authoritative documentation published via GitHub Pages
+site_name: ISO20022 Ecore
+site_description: ISO20022 Ecore Helper
 site_author: Chris Day
 site_url: https://chris-day.github.io/iso20022-ecore/
 
