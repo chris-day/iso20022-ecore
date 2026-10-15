@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Tuple
 
@@ -1213,6 +1214,31 @@ def preview_filtered_instance(
     }
 
 
+@contextmanager
+def _omit_export_references(objects, names):
+    # Suppress serialization without eSet(), which would also clear eOpposites.
+    originals = []
+    try:
+        for obj in objects:
+            refs = [ref for ref in _all_features(obj, "eAllReferences") if ref.name in names]
+            if any(ref.containment for ref in refs):
+                raise ValueError("--prune-drop-refs supports non-containment references only")
+            if not refs:
+                continue
+            original = obj._isset
+            obj._isset = original.copy()
+            originals.append((obj, original))
+            for ref in refs:
+                if isinstance(obj._isset, dict):
+                    obj._isset.pop(ref, None)
+                else:
+                    obj._isset.discard(ref)
+        yield
+    finally:
+        for obj, original in originals:
+            obj._isset = original
+
+
 def export_filtered_instance(
     instance_resource: XMIResource,
     output_path: str,
@@ -1225,6 +1251,7 @@ def export_filtered_instance(
     include_containers: bool = True,
     debug_attrs: bool = False,
     debug_defaults: bool = False,
+    drop_references: set[str] | None = None,
 ) -> dict[str, object]:
     all_objects, selected, expanded_include = _select_objects(
         instance_resource,
@@ -1380,16 +1407,16 @@ def export_filtered_instance(
     for obj in roots:
         out_res.append(obj)
 
+    with _omit_export_references(selected_set, drop_references or set()):
+        options = {XMIOptions.SERIALIZE_DEFAULT_VALUES: True} if serialize_defaults else None
+        out_res.save(options=options)
     if serialize_defaults:
-        out_res.save(options={XMIOptions.SERIALIZE_DEFAULT_VALUES: True})
         for etype, original in enum_to_string.items():
             if original is None:
                 if hasattr(etype, "to_string"):
                     delattr(etype, "to_string")
             else:
                 etype.to_string = original
-    else:
-        out_res.save()
 
     if original_values:
         for obj, ref, value in original_values:

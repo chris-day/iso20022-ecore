@@ -107,6 +107,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--include-classes", help="Comma-separated EClass names to include")
     parser.add_argument("--exclude-classes", help="Comma-separated EClass names to exclude")
     parser.add_argument(
+        "--prune-drop-refs",
+        help="Comma-separated non-containment reference names to omit from exported XMI",
+    )
+    parser.add_argument(
         "--prune-include-supertypes",
         action="store_true",
         help="Include supertypes of included classes during pruning",
@@ -359,6 +363,7 @@ def main(argv: list[str] | None = None) -> int:
                     include_containers=not args.prune_no_containers,
                     debug_attrs=args.prune_debug_attrs,
                     debug_defaults=args.prune_debug_defaults,
+                    drop_references={name.strip() for name in (args.prune_drop_refs or "").split(",") if name.strip()},
                 )
                 logging.info(
                     "Wrote instance XMI: %s (selected=%s roots=%s)",

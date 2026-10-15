@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.112
+Version: 0.1.113
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 
@@ -21,7 +21,7 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--export-mermaid <path>] [--export-plantuml <path>] [--export-gml <path>] \
-  [--export-instance <path>] [--include-classes <list>] [--exclude-classes <list>] [--prune-include-supertypes] [--prune-strip-refs] [--prune-serialize-defaults] [--prune-no-containers] \
+  [--export-instance <path>] [--include-classes <list>] [--exclude-classes <list>] [--prune-include-supertypes] [--prune-strip-refs] [--prune-drop-refs <list>] [--prune-serialize-defaults] [--prune-no-containers] \
   [--prune-dry-run] [--prune-dry-run-json <path>] \
   [--neighbors-from <expr>] [--neighbors <n>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
@@ -126,6 +126,29 @@ emf-read \
   --prune-strip-refs \
   --prune-serialize-defaults
 ```
+
+Export the conceptual resource while omitting `associationDomain`:
+
+```bash
+emf-read \
+  --ecore /var/software/input/ISO20022.ecore \
+  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
+  --export-instance /tmp/iso20022_conceptual_pruned.iso20022.xml \
+  --include-classes BusinessComponent,BusinessElement,BusinessAssociationEnd,BusinessAssociation,BusinessAttribute,DataType \
+  --prune-include-supertypes \
+  --prune-serialize-defaults \
+  --prune-strip-refs \
+  --prune-drop-refs associationDomain
+```
+
+`--prune-drop-refs` accepts comma-separated non-containment reference names,
+matched on every exported object's class (including inherited references).
+It omits those features from XMI even when their targets are retained, without
+writing `xsi:nil` placeholders. `BusinessAssociationEnd` objects and their `type`
+references remain. Unlike `--prune-strip-refs`, this option selects references
+by name rather than by whether their target was pruned. Containment reference
+names are not supported. Reloading XMI may reconstruct omitted inverse references
+from their retained opposites; this is an export presentation option.
 
 Preview pruning impact without writing an instance file:
 
