@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.115
+Version: 0.1.116
 
 Python 3.11+ library and CLI tools for Eclipse EMF `.ecore` metamodels and XMI/XML
 instances, using pyecore and lxml.

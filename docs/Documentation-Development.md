@@ -47,7 +47,7 @@ exercises consent before a choice, rejection, acceptance and revocation. Evidenc
 is saved under `documentation/migration/evidence/`, outside the cleaned site output.
 It records network requests, JavaScript failures and browser storage. The optional
 GitHub request is monitored; its external availability is reported separately from
-consent gating. CI uploads evidence for review.
+consent gating. These checks are optional local tools; the publishing workflow does not run them.
 
 ## Dependency updates
 
@@ -78,7 +78,7 @@ running every diagram and network check. Do not switch to an unpinned CDN URL.
 The established target is `https://chris-day.github.io/iso20022-ecore/`; the old
 configuration and Pages workflow agree, and it returned HTTP 200 during migration.
 No CNAME/custom domain was found. The existing main-branch/manual deployment triggers
-are retained. Pull requests build and verify only; the deployment job excludes them.
+are retained. Pull requests do not run this publishing workflow.
 This migration does not publish or change Pages settings. Deployment happens only
 after a maintainer merges/pushes the reviewed changes or dispatches the workflow.
 
@@ -99,7 +99,12 @@ no redirects because page filenames and `use_directory_urls = false` are preserv
 
 ## Hosted runner compatibility
 
-The workflow uses Node.js 24 action releases, including the Pages action's nested
-artifact uploader. Python remains 3.14 in the checkout's `.venv`. ISO 20022 integration
-tests skip when their external input files are absent; a generated metamodel test
-always exercises loading, registration and metamodel-only CLI output on hosted runners.
+The workflow follows the [standard Zensical GitHub Pages flow](https://zensical.org/docs/publish-your-site/):
+configure Pages, check out the repository, set up Python, install Zensical, build,
+upload the Pages artifact and deploy. It uses Node.js 24 action releases. Python
+remains 3.14 in the checkout's `.venv`, with pinned documentation dependencies.
+
+It does not install the application, run pytest, execute static/browser checks or
+upload verification evidence. Those tools remain available locally. ISO 20022
+integration tests skip when external inputs are absent; the generated metamodel
+test runs without external files.
