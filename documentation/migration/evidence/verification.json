@@ -1,0 +1,52 @@
+[
+  {
+    "command": [
+      ".venv/bin/python",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "Python 3.14.4\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "returncode": 0,
+    "stdout": "No broken requirements found.\n",
+    "stderr": "WARNING: The directory '<user-home>/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.\n"
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "-m",
+      "pytest",
+      "-q"
+    ],
+    "returncode": 0,
+    "stdout": ".s.s.......                                                              [100%]\n9 passed, 2 skipped in 1.17s\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      ".venv/bin/python",
+      "scripts/check_docs.py"
+    ],
+    "returncode": 0,
+    "stdout": "{\n  \"pages\": 21,\n  \"html_files\": 22,\n  \"llm_pages\": 21,\n  \"errors\": []\n}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

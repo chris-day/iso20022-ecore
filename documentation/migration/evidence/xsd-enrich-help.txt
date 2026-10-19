@@ -1,0 +1,16 @@
+usage: xsd-enrich [-h] --ecore ECORE --instance INSTANCE --xsd XSD
+                  --output OUTPUT [--map PREFS] [--trace-name TRACE_NAME]
+                  [--verbose]
+
+Enrich ISO 20022 XSD with xmi:id annotations.
+
+options:
+  -h, --help            show this help message and exit
+  --ecore ECORE         Path to .ecore file
+  --instance INSTANCE   Path to instance file (.xmi/.xml/.iso20022)
+  --xsd XSD             Path to input XSD
+  --output OUTPUT       Path to output XSD
+  --map PREFS           JSON file with kind->EClass preferences
+  --trace-name TRACE_NAME
+                        Trace mapping for a specific XSD name
+  --verbose             Verbose logging

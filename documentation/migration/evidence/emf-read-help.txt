@@ -1,0 +1,106 @@
+usage: emf-read [-h] --ecore ECORE [--instance INSTANCE] [--dump-metamodel]
+                [--dump-metamodel-json DUMP_METAMODEL_JSON]
+                [--export-metamodel-mermaid EXPORT_METAMODEL_MERMAID]
+                [--export-metamodel-plantuml EXPORT_METAMODEL_PLANTUML]
+                [--export-metamodel-gml EXPORT_METAMODEL_GML]
+                [--metamodel-include-references] [--dump-model]
+                [--dump-model-json DUMP_MODEL_JSON] [--dump-instances]
+                [--dump-instances-json DUMP_INSTANCES_JSON]
+                [--dump-instances-filter DUMP_INSTANCES_FILTER]
+                [--export-mermaid EXPORT_MERMAID]
+                [--export-plantuml EXPORT_PLANTUML] [--export-gml EXPORT_GML]
+                [--export-instance EXPORT_INSTANCE]
+                [--include-classes INCLUDE_CLASSES]
+                [--exclude-classes EXCLUDE_CLASSES]
+                [--prune-drop-refs PRUNE_DROP_REFS]
+                [--prune-include-supertypes] [--prune-strip-refs]
+                [--prune-serialize-defaults] [--prune-debug-attrs]
+                [--prune-debug-defaults] [--prune-no-containers]
+                [--prune-dry-run] [--prune-dry-run-json PRUNE_DRY_RUN_JSON]
+                [--neighbors-from NEIGHBORS_FROM] [--neighbors NEIGHBORS]
+                [--export-json EXPORT_JSON] [--export-edges EXPORT_EDGES]
+                [--export-paths EXPORT_PATHS]
+                [--export-path-ids EXPORT_PATH_IDS]
+                [--filter-expr FILTER_EXPR] [--expand-from EXPAND_FROM]
+                [--expand-depth EXPAND_DEPTH]
+                [--expand-classes EXPAND_CLASSES] [--verbose]
+
+Read EMF .ecore metamodels and instance files.
+
+options:
+  -h, --help            show this help message and exit
+  --ecore ECORE         Path to .ecore file
+  --instance INSTANCE   Path to instance file (.xmi/.xml/.iso20022)
+  --dump-metamodel      Print metamodel summary
+  --dump-metamodel-json DUMP_METAMODEL_JSON
+                        Write metamodel summary to JSON
+  --export-metamodel-mermaid EXPORT_METAMODEL_MERMAID
+                        Export metamodel graph to Mermaid
+  --export-metamodel-plantuml EXPORT_METAMODEL_PLANTUML
+                        Export metamodel graph to PlantUML
+  --export-metamodel-gml EXPORT_METAMODEL_GML
+                        Export metamodel graph to GML
+  --metamodel-include-references
+                        Include non-containment references in metamodel graphs
+  --dump-model          Print model summary
+  --dump-model-json DUMP_MODEL_JSON
+                        Write model summary to JSON
+  --dump-instances      Print instance summary
+  --dump-instances-json DUMP_INSTANCES_JSON
+                        Write instances grouped by class to JSON
+  --dump-instances-filter DUMP_INSTANCES_FILTER
+                        Filter expression for instance JSON dump
+  --export-mermaid EXPORT_MERMAID
+                        Export filtered instance graph to Mermaid
+  --export-plantuml EXPORT_PLANTUML
+                        Export filtered instance graph to PlantUML
+  --export-gml EXPORT_GML
+                        Export filtered instance graph to GML
+  --export-instance EXPORT_INSTANCE
+                        Export filtered instance resource to XMI
+  --include-classes INCLUDE_CLASSES
+                        Comma-separated EClass names to include
+  --exclude-classes EXCLUDE_CLASSES
+                        Comma-separated EClass names to exclude
+  --prune-drop-refs PRUNE_DROP_REFS
+                        Comma-separated non-containment reference names to
+                        omit from exported XMI
+  --prune-include-supertypes
+                        Include supertypes of included classes during pruning
+  --prune-strip-refs    Remove references to pruned classes in exported
+                        instance
+  --prune-serialize-defaults
+                        Serialize default attribute values in pruned instance
+                        output
+  --prune-debug-attrs   Log sample attribute values during pruning
+  --prune-debug-defaults
+                        Log default enum resolution during pruning
+  --prune-no-containers
+                        Do not include containment ancestors when pruning
+  --prune-dry-run       Preview pruning results without writing an instance
+                        file
+  --prune-dry-run-json PRUNE_DRY_RUN_JSON
+                        Write pruning dry-run summary to JSON
+  --neighbors-from NEIGHBORS_FROM
+                        Seed filter expression for neighborhood expansion
+  --neighbors NEIGHBORS
+                        Neighborhood hops for expansion
+  --export-json EXPORT_JSON
+                        Export loaded objects to JSON
+  --export-edges EXPORT_EDGES
+                        Export edges to CSV
+  --export-paths EXPORT_PATHS
+                        Export expansion paths to text
+  --export-path-ids EXPORT_PATH_IDS
+                        Export expansion path IDs to text
+  --filter-expr FILTER_EXPR
+                        Filter expression for exported objects
+  --expand-from EXPAND_FROM
+                        Expansion start expression (adds reachable objects via
+                        references)
+  --expand-depth EXPAND_DEPTH
+                        Expansion depth (0=start only, -1=unbounded). Default:
+                        1
+  --expand-classes EXPAND_CLASSES
+                        Comma-separated EClass names allowed during expansion
+  --verbose             Verbose logging

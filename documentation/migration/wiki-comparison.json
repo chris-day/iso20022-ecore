@@ -1,0 +1,92 @@
+[
+  {
+    "page": "xsd-enrich.md",
+    "local_remote_identical": true,
+    "docs_identical": false
+  },
+  {
+    "page": "Path-Exports.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Quick-Start.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Architecture.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "emf-read.md",
+    "local_remote_identical": true,
+    "docs_identical": false
+  },
+  {
+    "page": "Home.md",
+    "local_remote_identical": true,
+    "docs_identical": false
+  },
+  {
+    "page": "FAQ.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "_Sidebar.md",
+    "local_remote_identical": true,
+    "docs_identical": false
+  },
+  {
+    "page": "JSON-Schemas.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Filter-Language.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Instance-Grouping.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "API-Usage.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "XSD-Mapping-Rules.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Troubleshooting.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Pruning-and-Dry-Run.md",
+    "local_remote_identical": true,
+    "docs_identical": false
+  },
+  {
+    "page": "Exports-and-Formats.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Graph-Exports.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  },
+  {
+    "page": "Query-Language-Deep-Dive.md",
+    "local_remote_identical": true,
+    "docs_identical": true
+  }
+]

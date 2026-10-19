@@ -1,0 +1,93 @@
+{
+  "states": {
+    "before": {
+      "requests": [
+        "http://127.0.0.1:40763/iso20022-ecore/",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/stylesheets/modern/main.e442bf79.min.css",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/bundle.a2388154.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/vendor/mermaid/mermaid.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/javascripts/diagrams.js",
+        "http://127.0.0.1:40763/iso20022-ecore/search.json",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/workers/search.c47bb847.min.js"
+      ],
+      "localStorage": {},
+      "cookies": []
+    },
+    "rejected": {
+      "requests": [
+        "http://127.0.0.1:40763/iso20022-ecore/",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/stylesheets/modern/main.e442bf79.min.css",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/bundle.a2388154.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/vendor/mermaid/mermaid.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/javascripts/diagrams.js",
+        "http://127.0.0.1:40763/iso20022-ecore/search.json",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/workers/search.c47bb847.min.js"
+      ],
+      "localStorage": {
+        "/iso20022-ecore/.__consent": "{}"
+      },
+      "cookies": []
+    },
+    "accepted": {
+      "requests": [
+        "http://127.0.0.1:40763/iso20022-ecore/",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/stylesheets/modern/main.e442bf79.min.css",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/bundle.a2388154.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/vendor/mermaid/mermaid.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/javascripts/diagrams.js",
+        "http://127.0.0.1:40763/iso20022-ecore/search.json",
+        "https://api.github.com/repos/chris-day/iso20022-ecore/releases/latest",
+        "https://api.github.com/repos/chris-day/iso20022-ecore",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/workers/search.c47bb847.min.js"
+      ],
+      "localStorage": {
+        "/iso20022-ecore/.__consent": "{\"github\":true}"
+      },
+      "cookies": []
+    },
+    "revoked": {
+      "requests": [
+        "http://127.0.0.1:40763/iso20022-ecore/",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/stylesheets/modern/main.e442bf79.min.css",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/bundle.a2388154.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/vendor/mermaid/mermaid.min.js",
+        "http://127.0.0.1:40763/iso20022-ecore/javascripts/diagrams.js",
+        "http://127.0.0.1:40763/iso20022-ecore/search.json",
+        "http://127.0.0.1:40763/iso20022-ecore/assets/javascripts/workers/search.c47bb847.min.js"
+      ],
+      "localStorage": {
+        "/iso20022-ecore/.__consent": "{}"
+      },
+      "cookies": []
+    }
+  },
+  "diagrams": [
+    {
+      "page": "Pruning-and-Dry-Run.md",
+      "rendered": 2
+    }
+  ],
+  "errors": [],
+  "failed_requests": [],
+  "http_errors": [
+    {
+      "url": "https://api.github.com/repos/chris-day/iso20022-ecore/releases/latest",
+      "status": 404
+    }
+  ],
+  "screenshots": [
+    "JSON-Schemas-desktop.png",
+    "Pruning-and-Dry-Run-desktop.png",
+    "index-desktop.png",
+    "pruning-mobile.png"
+  ],
+  "search": {
+    "query": "associationDomain",
+    "matching_links": [
+      "Omitting named referencesemf-readPruning and dry-run Export the conceptual resource while omitting associationDomain:   emf-read \\\n  --ecore /var/software/input/ISO20022.ecore \\\n  --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \\\n  --export-instance /tmp/iso20022_conceptual_pruned.iso20022.xml \\\n  --include-classes BusinessComponent,BusinessElement,BusinessAssociationEnd,BusinessAssociation,BusinessAttribute,DataType \\\n  --prune-include-supertypes \\\n  --prune-serialize-defaults \\\n  --prune-strip-refs \\\n  --prune-drop-refs associationDomain\n   --prune-drop-refs accepts comma-separated non-contain ",
+      "Relatedemf-readCLI reference... med references for the conceptual pruning example using --prune-drop-refs associationDomain. ",
+      "Example: Conceptual pruningemf-readPruning and dry-run... pes \\\n  --prune-serialize-defaults \\\n  --prune-strip-refs \\\n  --prune-drop-refs associationDomain \\\n  --prune-debug-attrs\n "
+    ]
+  },
+  "result": "passed"
+}

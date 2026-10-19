@@ -1,0 +1,55 @@
+[project]
+site_name = "ISO 20022 EMF Tools"
+site_description = "Read, query and prune EMF resources, export graphs, and enrich ISO 20022 XML schemas."
+site_url = "https://chris-day.github.io/iso20022-ecore/"
+repo_url = "https://github.com/chris-day/iso20022-ecore"
+repo_name = "chris-day/iso20022-ecore"
+docs_dir = "docs"
+site_dir = "site"
+use_directory_urls = false
+copyright = '<a href="#__consent">Change cookie settings</a>'
+extra_javascript = ["assets/vendor/mermaid/mermaid.min.js", "javascripts/diagrams.js"]
+nav = [
+ {"Home" = "index.md"},
+ {"Getting started" = [{"Quick start" = "Quick-Start.md"}, {"CLI examples" = "CLI-Examples.md"}, {"Project references" = "Project-References.md"}]},
+ {"emf-read" = [{"CLI reference" = "emf-read.md"}, {"Filter language" = "Filter-Language.md"}, {"Query deep dive" = "Query-Language-Deep-Dive.md"}, {"Exports and formats" = "Exports-and-Formats.md"}, {"JSON structures" = "JSON-Schemas.md"}, {"Graph exports" = "Graph-Exports.md"}, {"Path exports" = "Path-Exports.md"}, {"Pruning and dry-run" = "Pruning-and-Dry-Run.md"}, {"Instance grouping" = "Instance-Grouping.md"}]},
+ {"xsd-enrich" = [{"CLI reference" = "xsd-enrich.md"}, {"Mapping rules" = "XSD-Mapping-Rules.md"}]},
+ {"Internals" = [{"Python API" = "API-Usage.md"}, {"Architecture" = "Architecture.md"}, {"Troubleshooting" = "Troubleshooting.md"}, {"FAQ" = "FAQ.md"}]},
+ {"Maintainers" = [{"Documentation development" = "Documentation-Development.md"}, {"Privacy" = "Privacy.md"}]}
+]
+
+[project.theme]
+variant = "modern"
+favicon = "assets/images/favicon.png"
+font = false
+features = ["navigation.sections", "content.code.copy", "content.action.copy", "search.highlight"]
+
+[project.extra]
+generator = false
+
+[project.extra.consent]
+title = "Cookie settings"
+description = "Search and diagrams run locally. We do not use analytics. You may allow GitHub repository statistics; that optional feature contacts GitHub. Your choice is saved in browser storage."
+actions = ["accept", "reject", "manage"]
+
+[project.extra.consent.cookies.github]
+name = "GitHub repository statistics"
+checked = false
+
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.tables]
+[project.markdown_extensions.toc]
+permalink = true
+[project.markdown_extensions."pymdownx.superfences"]
+custom_fences = [{name = "mermaid", class = "local-diagram", format = "pymdownx.superfences.fence_code_format"}]
+
+[project.plugins.search]
+[project.plugins.llmstxt]
+full_output = "llms-full.txt"
+[project.plugins.llmstxt.sections]
+"Getting started" = ["index.md", "Quick-Start.md", "CLI-Examples.md", "Project-References.md"]
+"emf-read" = ["emf-read.md", "Filter-Language.md", "Query-Language-Deep-Dive.md", "Exports-and-Formats.md", "JSON-Schemas.md", "Graph-Exports.md", "Path-Exports.md", "Pruning-and-Dry-Run.md", "Instance-Grouping.md"]
+"xsd-enrich" = ["xsd-enrich.md", "XSD-Mapping-Rules.md"]
+"Internals" = ["API-Usage.md", "Architecture.md", "Troubleshooting.md", "FAQ.md"]
+"Maintainers" = ["Documentation-Development.md", "Privacy.md"]

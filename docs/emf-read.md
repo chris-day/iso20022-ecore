@@ -12,7 +12,7 @@ emf-read --ecore <path> [--instance <path>] [--dump-metamodel] [--dump-metamodel
   [--dump-model] [--dump-model-json <path>] [--export-json <path>] \
   [--export-edges <path>] [--export-paths <path>] [--export-path-ids <path>] \
   [--export-mermaid <path>] [--export-plantuml <path>] [--export-gml <path>] \
-  [--export-instance <path>] [--include-classes <list>] [--exclude-classes <list>] [--prune-include-supertypes] [--prune-strip-refs] [--prune-serialize-defaults] [--prune-no-containers] \
+  [--export-instance <path>] [--include-classes <list>] [--exclude-classes <list>] [--prune-include-supertypes] [--prune-strip-refs] [--prune-drop-refs <list>] [--prune-serialize-defaults] [--prune-no-containers] \
   [--prune-dry-run] [--prune-dry-run-json <path>] [--neighbors-from <expr>] [--neighbors <n>] \
   [--filter-expr <expr>] [--expand-from <expr>] [--expand-depth <n>] \
   [--expand-classes <list>] [--verbose]
@@ -85,3 +85,5 @@ emf-read \
 - [Exports & Formats](Exports-and-Formats.md)
 - [Pruning & Dry-Run](Pruning-and-Dry-Run.md)
 - [Conceptual Pruning Example](Pruning-and-Dry-Run.md#example-conceptual-pruning)
+
+See [Omitting named references](Pruning-and-Dry-Run.md#omitting-named-references) for the conceptual pruning example using `--prune-drop-refs associationDomain`.

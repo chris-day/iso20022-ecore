@@ -1,114 +1,120 @@
 # JSON Schemas
 
-This page describes the JSON output formats produced by `emf-read`.
+These are output structure examples, not formal JSON Schema validation documents.
+They are generated from a small illustrative model (`urn:example`), not the full ISO 20022 metamodel.
 
 ## Metamodel JSON (`--dump-metamodel-json`)
-
-Top-level object:
 
 ```json
 {
   "packages": [
     {
-      "name": "ISO20022",
-      "nsURI": "...",
+      "name": "example",
+      "nsURI": "urn:example",
       "classes": [
         {
           "name": "BusinessComponent",
-          "attributes": ["name", "definition", "registrationStatus"],
-          "references": ["associationDomain", "derivation", "subType", "superType"]
+          "attributes": [
+            {
+              "name": "name",
+              "type": "EString",
+              "many": false
+            }
+          ],
+          "references": []
         }
-      ]
+      ],
+      "subpackages": []
     }
-  ]
+  ],
+  "total_classes": 1
 }
 ```
-
-Notes:
-
-- Packages include class names and their attribute/reference names.
-- `attributes` and `references` are metadata (not instance values).
 
 ## Model JSON (`--dump-model-json`)
 
-Top-level object:
-
 ```json
 {
+  "total_objects": 1,
   "classes": [
     {
       "name": "BusinessComponent",
-      "count": 123,
-      "attributes": ["name", "definition"],
-      "references": ["associationDomain", "derivation"]
+      "count": 1,
+      "attributes": [
+        "name"
+      ],
+      "references": []
     }
   ]
 }
 ```
 
-Notes:
-
-- This summarizes instance counts per class, plus attribute/reference names.
-
 ## Instance JSON (`--export-json`)
-
-Top-level is a list of objects:
 
 ```json
 [
   {
-    "id": "_E1rHgsTGEeChad0JzLk7QA_-1068889728",
-    "ID": "_E1rHgsTGEeChad0JzLk7QA_-1068889728",
-    "local_id": "o42",
+    "id": "account-id",
+    "local_id": "o1",
+    "ID": "account-id",
     "eClass": "BusinessComponent",
-    "nsURI": "...",
+    "nsURI": "urn:example",
     "attributes": {
-      "name": "Account",
-      "definition": "...",
-      "registrationStatus": "Registered"
+      "name": "Account"
     },
-    "containment": ["o43", "o44"],
-    "references": {
-      "subType": ["o120"],
-      "superType": ["o7"]
-    },
-    "path": "/Repository[0]/businessComponent[12]"
+    "containment": [],
+    "references": {},
+    "path": "/BusinessComponent[0]"
   }
 ]
 ```
 
-Notes:
-
-- `id`/`ID` prefer XML `xmi:id` if present, else `local_id`.
-- `containment` is a list of child IDs.
-- `references` maps reference names to target IDs.
-
-## Edges CSV (`--export-edges`)
-
-Columns:
-
-- `src_id`
-- `src_class`
-- `feature`
-- `dst_id`
-- `dst_class`
-- `containment` (true/false)
-
 ## Instances by class (`--dump-instances-json`)
-
-Top-level object:
 
 ```json
 {
-  "BusinessComponent": [
-    {"id": "...", "name": "Account"}
-  ],
-  "MessageComponent": [
-    {"id": "...", "name": "AmountAndDirection61"}
-  ]
+  "total_objects": 1,
+  "classes": {
+    "BusinessComponent": [
+      {
+        "id": "account-id",
+        "local_id": "o1",
+        "ID": "account-id",
+        "eClass": "BusinessComponent",
+        "nsURI": "urn:example",
+        "path": "/BusinessComponent[0]",
+        "attributes": {
+          "name": "Account"
+        },
+        "containment": [],
+        "references": {}
+      }
+    ]
+  }
 }
 ```
 
-Notes:
+## Field semantics
 
-- Values are lightweight dictionaries used for inspection and filtering.
+Metamodel attributes are metadata objects with `name`, `type`, and `many`;
+references also have `containment`. Packages include `subpackages`; the top level
+includes `total_classes`. Exact cardinality bounds are not exported.
+
+Model JSON summarizes counts and feature **names**, with `total_objects` at the root.
+Grouped instance output wraps class lists under `classes` and includes `total_objects`
+for the traversed graph before filtering. Each entry has the same full shape as
+an object export; `name` is under `attributes`, not at the entry root.
+
+`id` and `ID` prefer the loaded `_internal_id`; `local_id` is traversal-local.
+Containment and reference arrays use the same preferred ID scheme. Scalar attributes
+can be null; multi-valued attributes are lists. Enum conversion currently uses the
+enum name when available (for example `REGISTERED`), not necessarily its XML literal.
+References to objects outside a filtered JSON export are omitted. Grouped exports
+build their ID map before filtering, so references may identify entries not included
+in the selected groups. Paths are containment feature paths, not the name-only
+expansion paths described in [Path exports](Path-Exports.md).
+
+## Edges CSV (`--export-edges`)
+
+The header is `src_id,src_class,feature,dst_id,dst_class,containment`.
+Python's CSV writer emits booleans as `True` and `False`. Treat IDs as strings.

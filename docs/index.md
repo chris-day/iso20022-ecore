@@ -1,6 +1,6 @@
 # ISO 20022 EMF Tools
 
-Welcome to the ISO 20022 EMF tools wiki. This repository provides:
+Inspect, query, export and enrich ISO 20022 EMF models with Python. This repository provides:
 
 - `emf-read`: a CLI and Python library for loading ISO 20022 EMF `.ecore` metamodels and instance resources, exporting JSON/CSV/graph/paths, and filtering/expanding the object graph.
 - `xsd-enrich`: a CLI tool that enriches ISO 20022 XSDs with EMF `xmi:id`, model definitions, and related annotations.
@@ -24,7 +24,7 @@ If you're new, start with:
 - instance files, such as `20250424_ISO20022_2013_eRepository.iso20022`
 - ISO 20022 XSDs (e.g., `auth.016.001.03.xsd`)
 
-## Index
+## Documentation index
 
 - [Quick Start](Quick-Start.md)
 - [emf-read CLI](emf-read.md)
@@ -42,3 +42,10 @@ If you're new, start with:
 - [Architecture](Architecture.md)
 - [Troubleshooting](Troubleshooting.md)
 - [FAQ](FAQ.md)
+
+## Examples and project references
+
+- [Complete CLI examples](CLI-Examples.md)
+- [Reference documents and diagram](Project-References.md)
+- [Documentation development](Documentation-Development.md)
+- [Privacy](Privacy.md)

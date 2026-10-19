@@ -46,3 +46,7 @@ emf-read \
   --filter-expr "is_kind_of('BusinessComponent')" \
   --export-gml /tmp/business_components.gml
 ```
+
+## Rendering and interpretation
+
+These commands export diagram text; they do not render images. GML is Graph Modelling Language, not GraphML. Instance edges are unlabeled and require both endpoints in the selected graph. Metamodel exports currently use a helper that reads the EClass metaclass for references, so reference completeness must be checked against `.ecore`; inheritance uses direct `eSuperTypes`. PlantUML currently uses composition notation for optional non-containment references too.

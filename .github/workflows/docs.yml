@@ -1,62 +1,61 @@
 name: Build & Publish Documentation
 
 on:
+  pull_request:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "docs-pages"
+  group: docs-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+          python-version: "3.14"
+      - name: Install locked dependencies in the checkout environment
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-docs.txt -r requirements-docs-browser.txt -r requirements-test.txt
+          .venv/bin/python -m pip install --no-deps -e .
+          .venv/bin/python -m pip check
+          .venv/bin/python -m playwright install --with-deps chromium
+      - name: Check application and documentation
+        run: |
+          .venv/bin/python -m pytest -q
+          .venv/bin/zensical build --clean --strict
+          .venv/bin/python scripts/check_docs.py
+          .venv/bin/python scripts/check_docs_browser.py
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          python-version: "3.11"
-
-      - name: Install documentation dependencies
-        run: |
-          pip install \
-            mkdocs \
-            mkdocs-material \
-            mkdocs-mermaid2-plugin \
-            mkdocs-network-graph-plugin \
-            mkdocs-minify-plugin \
-            mkdocs-git-revision-date-localized-plugin 
-
-      - name: Build MkDocs site
-        run: |
-          mkdocs build --strict
-
-      - name: Upload Pages artefact
+          name: documentation-verification
+          path: documentation/migration/evidence/
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
-
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

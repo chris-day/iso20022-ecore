@@ -69,3 +69,7 @@ summary = preview_prune_metamodel(
     exclude_classes={"BusinessProcess"},
 )
 ```
+
+## Return values and ownership
+
+`build_object_graph` returns `ObjectInfo` entries and containment edges. `export_json` and `export_edges` return `(entries, metrics)`; graph exporters return count dictionaries. Grouped instance dumps return a dictionary with `total_objects` and `classes`. Prefer fresh loads for pruned exports because the current exporter moves objects and changes references. Read [Pruning limitations](Pruning-and-Dry-Run.md#implementation-limits) before using pruning in a long-lived process.

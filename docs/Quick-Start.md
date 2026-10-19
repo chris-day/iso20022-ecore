@@ -3,6 +3,8 @@
 ## Install
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 python -m pip install -e .
 ```
 
@@ -28,7 +30,7 @@ emf-read \
 emf-read \
   --ecore /var/software/input/ISO20022.ecore \
   --instance /var/software/input/20250424_ISO20022_2013_eRepository.iso20022 \
-  --dump-model
+  --dump-model-json /tmp/model.json
 ```
 
 ## Export graph
@@ -50,3 +52,5 @@ xsd-enrich \
   --xsd auth.016.001.03.xsd \
   --output /tmp/auth.016.001.03.enriched.xsd
 ```
+
+The paths above are example input locations. Supply the external metamodel and resource locally. See [Troubleshooting](Troubleshooting.md) for known limitations of text model dumps.

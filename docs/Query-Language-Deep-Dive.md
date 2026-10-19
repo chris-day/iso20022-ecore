@@ -19,6 +19,8 @@ Expressions are evaluated against a per-object context. The same syntax is used 
 - `ID`: alias for `id`
 - `local_id`: stable internal ID for the run
 - `nsuri`: namespace URI of the EPackage
+- `path`: containment path
+- `attrs`: dictionary of attribute values; for example `attrs["name"]`
 
 ## Helper functions
 
@@ -27,9 +29,9 @@ Expressions are evaluated against a per-object context. The same syntax is used 
 
 ## Operators
 
-- `==`, `!=`
+- `==`, `!=`, `<`, `<=`, `>`, `>=`
 - `and`, `or`, `not`
-- `in` (for tuple literals)
+- `in`, `not in` (lists, tuples, sets, and dictionary keys)
 
 ## Examples
 
@@ -71,6 +73,10 @@ name == 'Account'
 
 ## Tips
 
-- Strings must be quoted with single quotes.
+- Strings may use either Python quote style; shell quoting must preserve the expression.
 - Keep expressions simple when troubleshooting.
 - For ID filters, prefer `id` so XML `xmi:id` is used when present.
+
+## Limits
+
+Only `is_class` and `is_kind_of` calls are accepted. Attribute access, arbitrary Python calls and arithmetic are rejected. Missing feature names can raise an evaluation error; `name` is supplied as `None` when absent. Guard nullable values before ordered comparisons. Enum values in the query context use their model names, such as `REGISTERED`, rather than their XML literals. Direct attribute names can override context fields of the same name.

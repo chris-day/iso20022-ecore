@@ -18,9 +18,10 @@ pytest
 # Run a single test
 pytest tests/test_cli.py::test_name
 
-# Build docs (MkDocs Material)
-mkdocs serve
-mkdocs build
+# Build docs (Zensical; dependencies in requirements-docs.txt)
+.venv/bin/zensical serve
+.venv/bin/zensical build --clean --strict
+.venv/bin/python scripts/check_docs.py
 ```
 
 ## Architecture

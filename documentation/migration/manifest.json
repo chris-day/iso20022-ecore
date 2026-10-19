@@ -1,0 +1,601 @@
+{
+  "repository": "https://github.com/chris-day/iso20022-ecore",
+  "baseline_commit": "b07218320db134e6453a32e7f2c93d584a20328e",
+  "remote_wiki_commit": "460fb39edfb8db36876ccb7ae8c6c78b9c7ced57",
+  "site_url": "https://chris-day.github.io/iso20022-ecore/",
+  "sources": [
+    {
+      "source": "docs/API-Usage.md",
+      "sha256": "cc0c5ee8d7e5e413224f9bd4c65e4bcbd1e59393032496b30578e2b93d1d5635",
+      "destination": "docs/API-Usage.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Architecture.md",
+      "sha256": "118d7e5e2251bf3af5645e5d5bf5b50b259844f36f8adcdd94e207769e0a94e5",
+      "destination": "docs/Architecture.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Exports-and-Formats.md",
+      "sha256": "84ceefd1a9182627270888440cc0e58141863196a345004fcb6d0eac61ea7f23",
+      "destination": "docs/Exports-and-Formats.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/FAQ.md",
+      "sha256": "1bba14a77dd8516eaa68b43e383fbc28fee6549e5f535e236f2783e57301e788",
+      "destination": "docs/FAQ.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Filter-Language.md",
+      "sha256": "f9c63b8c012ace90fe502e1714605347f871035879ac053938ea4bc00af288d0",
+      "destination": "docs/Filter-Language.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Graph-Exports.md",
+      "sha256": "0f85a5bc7d56cdf8911639978df8b092b91ba639feaa217308c88c6176bc2e95",
+      "destination": "docs/Graph-Exports.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Instance-Grouping.md",
+      "sha256": "a12b6a9b95002654f7c2198b90bb22840702c5ac160de822ff2de2fb7809a4f4",
+      "destination": "docs/Instance-Grouping.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/JSON-Schemas.md",
+      "sha256": "bb329960c272a669e5f3bff2d57b07ba9187373174d94e12a607c2a77b92fe26",
+      "destination": "docs/JSON-Schemas.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Path-Exports.md",
+      "sha256": "40a00caee15a04188079264efb74891a12d64d8f397e7c776fffe14a408961ec",
+      "destination": "docs/Path-Exports.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Pruning-and-Dry-Run.md",
+      "sha256": "26cbb34632cdb7753ca6eeb62cd6cd922e6308d86a0e5885d1d05c9cd97de6be",
+      "destination": "docs/Pruning-and-Dry-Run.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Query-Language-Deep-Dive.md",
+      "sha256": "716f5a6866a4c6bbd8b1b34d4e4e282deda5c030aae5e7810bd97218b6a9802f",
+      "destination": "docs/Query-Language-Deep-Dive.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Quick-Start.md",
+      "sha256": "90bf5b8873c165c19d37cebc17547d62beaba754ed0c945b8437715b6a12aa64",
+      "destination": "docs/Quick-Start.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/Troubleshooting.md",
+      "sha256": "65de46f124bc40da23043d47ce9a0dfddc20b11b914143364e06e9d2b41c435d",
+      "destination": "docs/Troubleshooting.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/XSD-Mapping-Rules.md",
+      "sha256": "48ac39c5aca9cce80361308809faf9c930f58fe0fa3860ae1c9f47ff5f468ae4",
+      "destination": "docs/XSD-Mapping-Rules.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/emf-read.md",
+      "sha256": "00763226ab53a73a23ebd84436d9ac7f1fb5f326613136fc563a2ae81959ab3c",
+      "destination": "docs/emf-read.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/index.md",
+      "sha256": "a5fbf5bc8982208405f29fe30ae49d3e1d26a34e809652a1cfbeaca8f9eef67e",
+      "destination": "docs/index.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "docs/xsd-enrich.md",
+      "sha256": "0fc7dc31622b1725d301fb7b819dff0aad808050fe2b96df1bc7be0511798378",
+      "destination": "docs/xsd-enrich.md",
+      "disposition": "merge",
+      "reason": "Preserve filename and existing .html URL; reconcile wiki and implementation"
+    },
+    {
+      "source": "local-wiki/API-Usage.md",
+      "sha256": "cc0c5ee8d7e5e413224f9bd4c65e4bcbd1e59393032496b30578e2b93d1d5635",
+      "destination": "docs/API-Usage.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Architecture.md",
+      "sha256": "118d7e5e2251bf3af5645e5d5bf5b50b259844f36f8adcdd94e207769e0a94e5",
+      "destination": "docs/Architecture.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Exports-and-Formats.md",
+      "sha256": "84ceefd1a9182627270888440cc0e58141863196a345004fcb6d0eac61ea7f23",
+      "destination": "docs/Exports-and-Formats.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/FAQ.md",
+      "sha256": "1bba14a77dd8516eaa68b43e383fbc28fee6549e5f535e236f2783e57301e788",
+      "destination": "docs/FAQ.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Filter-Language.md",
+      "sha256": "f9c63b8c012ace90fe502e1714605347f871035879ac053938ea4bc00af288d0",
+      "destination": "docs/Filter-Language.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Graph-Exports.md",
+      "sha256": "0f85a5bc7d56cdf8911639978df8b092b91ba639feaa217308c88c6176bc2e95",
+      "destination": "docs/Graph-Exports.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Home.md",
+      "sha256": "da39cc3929ad35c9f3c5945b3bc80747a5e45503f59fe28b847a5d77e446684c",
+      "destination": "docs/index.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Instance-Grouping.md",
+      "sha256": "a12b6a9b95002654f7c2198b90bb22840702c5ac160de822ff2de2fb7809a4f4",
+      "destination": "docs/Instance-Grouping.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/JSON-Schemas.md",
+      "sha256": "bb329960c272a669e5f3bff2d57b07ba9187373174d94e12a607c2a77b92fe26",
+      "destination": "docs/JSON-Schemas.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Path-Exports.md",
+      "sha256": "40a00caee15a04188079264efb74891a12d64d8f397e7c776fffe14a408961ec",
+      "destination": "docs/Path-Exports.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Pruning-and-Dry-Run.md",
+      "sha256": "a5abe23c0529df747d17e5e1d76578d321ad8930f94b74bd4eec70593401170b",
+      "destination": "docs/Pruning-and-Dry-Run.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Query-Language-Deep-Dive.md",
+      "sha256": "716f5a6866a4c6bbd8b1b34d4e4e282deda5c030aae5e7810bd97218b6a9802f",
+      "destination": "docs/Query-Language-Deep-Dive.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Quick-Start.md",
+      "sha256": "90bf5b8873c165c19d37cebc17547d62beaba754ed0c945b8437715b6a12aa64",
+      "destination": "docs/Quick-Start.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/Troubleshooting.md",
+      "sha256": "65de46f124bc40da23043d47ce9a0dfddc20b11b914143364e06e9d2b41c435d",
+      "destination": "docs/Troubleshooting.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/XSD-Mapping-Rules.md",
+      "sha256": "48ac39c5aca9cce80361308809faf9c930f58fe0fa3860ae1c9f47ff5f468ae4",
+      "destination": "docs/XSD-Mapping-Rules.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/_Sidebar.md",
+      "sha256": "57b107efbec1c77cc05050126cc7d8f5ab1407d39d8448f34648bd0a5a6d7246",
+      "destination": "zensical.toml",
+      "disposition": "navigation",
+      "reason": "Sidebar informs navigation; wiki retained unchanged"
+    },
+    {
+      "source": "local-wiki/emf-read.md",
+      "sha256": "6d609e6d07b6fa087437cad373f4aa3d2e242532351a66d0eeed286e98b56f85",
+      "destination": "docs/emf-read.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "local-wiki/xsd-enrich.md",
+      "sha256": "c3310c4d8a8b2d09bc9dd3717d6189caf86f0848f787426a4f59924c560028ee",
+      "destination": "docs/xsd-enrich.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/API-Usage.md",
+      "sha256": "cc0c5ee8d7e5e413224f9bd4c65e4bcbd1e59393032496b30578e2b93d1d5635",
+      "destination": "docs/API-Usage.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Architecture.md",
+      "sha256": "118d7e5e2251bf3af5645e5d5bf5b50b259844f36f8adcdd94e207769e0a94e5",
+      "destination": "docs/Architecture.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Exports-and-Formats.md",
+      "sha256": "84ceefd1a9182627270888440cc0e58141863196a345004fcb6d0eac61ea7f23",
+      "destination": "docs/Exports-and-Formats.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/FAQ.md",
+      "sha256": "1bba14a77dd8516eaa68b43e383fbc28fee6549e5f535e236f2783e57301e788",
+      "destination": "docs/FAQ.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Filter-Language.md",
+      "sha256": "f9c63b8c012ace90fe502e1714605347f871035879ac053938ea4bc00af288d0",
+      "destination": "docs/Filter-Language.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Graph-Exports.md",
+      "sha256": "0f85a5bc7d56cdf8911639978df8b092b91ba639feaa217308c88c6176bc2e95",
+      "destination": "docs/Graph-Exports.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Home.md",
+      "sha256": "da39cc3929ad35c9f3c5945b3bc80747a5e45503f59fe28b847a5d77e446684c",
+      "destination": "docs/index.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Instance-Grouping.md",
+      "sha256": "a12b6a9b95002654f7c2198b90bb22840702c5ac160de822ff2de2fb7809a4f4",
+      "destination": "docs/Instance-Grouping.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/JSON-Schemas.md",
+      "sha256": "bb329960c272a669e5f3bff2d57b07ba9187373174d94e12a607c2a77b92fe26",
+      "destination": "docs/JSON-Schemas.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Path-Exports.md",
+      "sha256": "40a00caee15a04188079264efb74891a12d64d8f397e7c776fffe14a408961ec",
+      "destination": "docs/Path-Exports.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Pruning-and-Dry-Run.md",
+      "sha256": "a5abe23c0529df747d17e5e1d76578d321ad8930f94b74bd4eec70593401170b",
+      "destination": "docs/Pruning-and-Dry-Run.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Query-Language-Deep-Dive.md",
+      "sha256": "716f5a6866a4c6bbd8b1b34d4e4e282deda5c030aae5e7810bd97218b6a9802f",
+      "destination": "docs/Query-Language-Deep-Dive.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Quick-Start.md",
+      "sha256": "90bf5b8873c165c19d37cebc17547d62beaba754ed0c945b8437715b6a12aa64",
+      "destination": "docs/Quick-Start.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/Troubleshooting.md",
+      "sha256": "65de46f124bc40da23043d47ce9a0dfddc20b11b914143364e06e9d2b41c435d",
+      "destination": "docs/Troubleshooting.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/XSD-Mapping-Rules.md",
+      "sha256": "48ac39c5aca9cce80361308809faf9c930f58fe0fa3860ae1c9f47ff5f468ae4",
+      "destination": "docs/XSD-Mapping-Rules.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/_Sidebar.md",
+      "sha256": "57b107efbec1c77cc05050126cc7d8f5ab1407d39d8448f34648bd0a5a6d7246",
+      "destination": "zensical.toml",
+      "disposition": "navigation",
+      "reason": "Sidebar informs navigation; wiki retained unchanged"
+    },
+    {
+      "source": "remote-wiki/emf-read.md",
+      "sha256": "6d609e6d07b6fa087437cad373f4aa3d2e242532351a66d0eeed286e98b56f85",
+      "destination": "docs/emf-read.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "remote-wiki/xsd-enrich.md",
+      "sha256": "c3310c4d8a8b2d09bc9dd3717d6189caf86f0848f787426a4f59924c560028ee",
+      "destination": "docs/xsd-enrich.md",
+      "disposition": "merge",
+      "reason": "Merge into canonical docs; keep wiki unchanged"
+    },
+    {
+      "source": "README.md",
+      "sha256": "81b89a86079d467d571d452f1a842caefc334f56af626f9bfefa62354b424d8c",
+      "destination": "docs/CLI-Examples.md",
+      "disposition": "migrate",
+      "reason": "Preserve detailed examples; shorten root README"
+    },
+    {
+      "source": "CLAUDE.md",
+      "sha256": "5b3e5135a988324bf24e6c42cadbc3cbcb17ac86ab8e9475b31be56d7d86e66b",
+      "destination": "CLAUDE.md",
+      "disposition": "adapt",
+      "reason": "Repository guidance; update build commands"
+    },
+    {
+      "source": "LICENSE",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "destination": "LICENSE",
+      "disposition": "retain",
+      "reason": "Canonical legal text remains in root; link from site"
+    },
+    {
+      "source": "mkdocs.yml",
+      "sha256": "bebce39f8b3935c035cf934e47ee18951a1e2fda780f4068d91678d63fa94afb",
+      "destination": "documentation/migration/mkdocs.legacy.yml",
+      "disposition": "archive",
+      "reason": "Retain legacy configuration for rollback"
+    },
+    {
+      "source": ".github/workflows/docs.yml",
+      "sha256": "195c211f7b76cbb235460b7a2f62bc41b02fa4faa0bb655cb56ea262289b845f",
+      "destination": ".github/workflows/docs.yml",
+      "disposition": "adapt",
+      "reason": "Existing Pages workflow"
+    },
+    {
+      "source": "BusinessComponentVisualisation.png",
+      "sha256": "9c4d6bb698a5a33d41818f4a1c2d1ebf88d65120cb90bb9e4dd097fcbed6449f",
+      "destination": "docs/assets/images/BusinessComponentVisualisation.png",
+      "disposition": "copy",
+      "reason": "Preserve existing diagram"
+    },
+    {
+      "source": "UMLprofile.doc",
+      "sha256": "3b0882414c48fae7de1c5320c8a2d0ff703f0f194eebd5863e8cafe7b4176111",
+      "destination": "UMLprofile.doc",
+      "disposition": "retain",
+      "reason": "Binary reference document; link to repository; do not invent conversion"
+    },
+    {
+      "source": "XMLSchemaGeneration.doc",
+      "sha256": "461cb86245e2c2dad06f3ed6a05cddf83425991123f7d87e168797c5d047d265",
+      "destination": "XMLSchemaGeneration.doc",
+      "disposition": "retain",
+      "reason": "Binary reference document; link to repository"
+    },
+    {
+      "source": "auth.016.001.03.xsd",
+      "sha256": "39ebc3a8268d6d33eb657779627459df323fb58ac87d7b01d295080d8ae26206",
+      "destination": "auth.016.001.03.xsd",
+      "disposition": "retain",
+      "reason": "Example schema; link to repository"
+    },
+    {
+      "source": "helper.txt",
+      "sha256": "b102f487cdbc1911457f1195d0f5ab58ce7abf24183cfd9cf8d6e41c0a6f5087",
+      "destination": null,
+      "disposition": "exclude",
+      "reason": "Untracked local operational draft, not authorized for publication"
+    },
+    {
+      "source": "../favicon.png",
+      "sha256": "700ac014ff753785547d3702dd40b34bea895e8d0fbcaead1f6e004d0117050f",
+      "destination": "docs/assets/images/favicon.png",
+      "disposition": "copy",
+      "reason": "User-supplied favicon"
+    }
+  ],
+  "new_files": [
+    {
+      "destination": "docs/Documentation-Development.md",
+      "disposition": "new",
+      "reason": "Migration reference, verification guidance or locally served asset"
+    },
+    {
+      "destination": "docs/Privacy.md",
+      "disposition": "new",
+      "reason": "Migration reference, verification guidance or locally served asset"
+    },
+    {
+      "destination": "docs/Project-References.md",
+      "disposition": "new",
+      "reason": "Migration reference, verification guidance or locally served asset"
+    },
+    {
+      "destination": "docs/assets/vendor/mermaid/LICENSE",
+      "disposition": "vendored",
+      "reason": "Migration reference, verification guidance or locally served asset",
+      "sha256": "ec9fb67dcb25eccc416ed56e1aab819222c805a2a4bfe4cb19e7556bf2ffde80",
+      "provenance": "https://registry.npmjs.org/mermaid/-/mermaid-11.12.0.tgz",
+      "license": "MIT (included LICENSE)",
+      "version": "11.12.0"
+    },
+    {
+      "destination": "docs/assets/vendor/mermaid/mermaid.min.js",
+      "disposition": "vendored",
+      "reason": "Migration reference, verification guidance or locally served asset",
+      "sha256": "07e37dfa97b337ccc85365d57eddf99b9706f09db3b59b260d0333b23b343c4b",
+      "provenance": "https://registry.npmjs.org/mermaid/-/mermaid-11.12.0.tgz",
+      "license": "MIT (included LICENSE)",
+      "version": "11.12.0"
+    },
+    {
+      "destination": "docs/javascripts/diagrams.js",
+      "disposition": "new",
+      "reason": "Migration reference, verification guidance or locally served asset"
+    },
+    {
+      "destination": "scripts/check_docs.py",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "scripts/check_docs_browser.py",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "scripts/lock_docs.py",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "requirements-docs.txt",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "requirements-docs-browser.txt",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "requirements-test.txt",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "documentation/migration/REPORT.md",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "documentation/migration/MAP.md",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "documentation/migration/wiki-comparison.json",
+      "disposition": "new",
+      "reason": "Migration configuration, reproducibility, accounting or verification"
+    },
+    {
+      "destination": "documentation/migration/evidence/JSON-Schemas-desktop.png",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/Pruning-and-Dry-Run-desktop.png",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/browser-check.json",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/emf-read-help.txt",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/index-desktop.png",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/pruning-mobile.png",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/static-check.json",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/verification.json",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/xsd-enrich-help.txt",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/evidence/zensical-build-help.txt",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    },
+    {
+      "destination": "documentation/migration/manifest.json",
+      "disposition": "new",
+      "reason": "Migration manifest or repeatable verification evidence; not published in the documentation site"
+    }
+  ],
+  "source_roots": {
+    "repository": ".",
+    "local-wiki": "../iso20022-ecore.wiki",
+    "remote-wiki": "https://github.com/chris-day/iso20022-ecore.wiki.git"
+  }
+}
