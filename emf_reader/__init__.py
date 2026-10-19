@@ -1,6 +1,6 @@
 """EMF metamodel/instance reader using pyecore."""
 
-__version__ = "0.1.114"
+__version__ = "0.1.115"
 
 from .loader import (
     load_metamodel,

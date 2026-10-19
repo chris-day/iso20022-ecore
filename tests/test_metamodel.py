@@ -1,7 +1,14 @@
+from pathlib import Path
+
+import pytest
+
 from emf_reader.loader import count_metamodel_classes, load_metamodel, summarize_metamodel
 
 
 ECORE_PATH = "/var/software/input/ISO20022.ecore"
+pytestmark = pytest.mark.skipif(
+    not Path(ECORE_PATH).is_file(), reason="External ISO20022.ecore fixture is unavailable"
+)
 
 
 def test_load_metamodel():

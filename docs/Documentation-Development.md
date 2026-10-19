@@ -96,3 +96,10 @@ The old missing `stylesheets/extra.css` reference is removed. Unused plugins ins
 by the old workflow are not carried forward. GitHub Wiki URLs cannot be redirected
 by this site; historical wiki sources remain available. Existing site URLs require
 no redirects because page filenames and `use_directory_urls = false` are preserved.
+
+## Hosted runner compatibility
+
+The workflow uses Node.js 24 action releases, including the Pages action's nested
+artifact uploader. Python remains 3.14 in the checkout's `.venv`. ISO 20022 integration
+tests skip when their external input files are absent; a generated metamodel test
+always exercises loading, registration and metamodel-only CLI output on hosted runners.
