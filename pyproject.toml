@@ -1,6 +1,6 @@
 [project]
 name = "emf_reader"
-version = "0.1.116"
+version = "0.1.117"
 description = "Read EMF .ecore metamodels and instance files"
 requires-python = ">=3.11"
 readme = "README.md"
@@ -10,6 +10,14 @@ authors = [{name = "Codex"}]
 dependencies = [
   "pyecore>=0.13",
   "lxml>=4.9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.0",
+  "pytest>=7",
+  "playwright>=1.40",
+  "zensical>=0.0.71",
 ]
 
 [project.scripts]

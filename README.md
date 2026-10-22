@@ -1,6 +1,6 @@
 # emf_reader
 
-Version: 0.1.116
+Version: 0.1.117
 
 Python 3.11+ library and CLI tools for Eclipse EMF `.ecore` metamodels and XMI/XML
 instances, using pyecore and lxml.
@@ -29,6 +29,13 @@ is retained as historical material; migrate any future wiki changes through revi
 The site migration is not published until the normal Pages workflow runs.
 
 ## Develop and verify
+
+For the full pinned development environment:
+
+```bash
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m pip install --no-deps --no-build-isolation -e ".[dev]"
+```
 
 ```bash
 .venv/bin/python -m pip install -r requirements-docs.txt

@@ -1,6 +1,6 @@
 # CLI Examples
 
-Version: 0.1.116
+Version: 0.1.117
 
 Python library and CLI for loading Eclipse EMF `.ecore` metamodels and instance files (XMI/XML) using **pyecore**.
 

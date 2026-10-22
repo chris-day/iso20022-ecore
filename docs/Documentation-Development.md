@@ -52,26 +52,42 @@ consent gating. These checks are optional local tools; the publishing workflow d
 ## Dependency updates
 
 The complete installed dependency closures are pinned in `requirements-docs.txt`,
-`requirements-docs-browser.txt` and `requirements-test.txt`. Update deliberately in
+`requirements-docs-browser.txt` and `requirements-test.txt`. The full development
+environment, including packaging tools, is pinned in `requirements-dev.txt`.
+Update deliberately in
 the same `.venv`, then regenerate and review all pins:
 
 ```bash
-.venv/bin/python -m pip install --upgrade zensical playwright pytest
+.venv/bin/python -m pip install --upgrade --upgrade-strategy eager -e ".[dev]" pip setuptools wheel
+.venv/bin/python -m pip install --upgrade --force-reinstall zensical
 .venv/bin/python scripts/lock_docs.py
-.venv/bin/python -m pip install --force-reinstall -r requirements-docs.txt -r requirements-docs-browser.txt
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m pip install --no-deps --no-build-isolation -e ".[dev]"
 .venv/bin/python -m pip check
 .venv/bin/zensical build --clean --strict
 .venv/bin/python scripts/check_docs.py
 .venv/bin/python scripts/check_docs_browser.py
-.venv/bin/python -m pip install -r requirements-test.txt
 .venv/bin/python -m pytest -q
+.venv/bin/python -m pip list --outdated
+.venv/bin/python -m build --no-isolation
 ```
+
+For a reproducible full setup, install `requirements-dev.txt` and then the editable
+package with `--no-deps --no-build-isolation -e ".[dev]"`. This regenerates the
+`emf-read` and `xsd-enrich` console scripts in `.venv/bin/`. Build wheel and source
+archives with `.venv/bin/python -m build --no-isolation`; outputs are in ignored
+`dist/`. No standalone binary bundler is configured.
 
 The lock writer evaluates dependency markers for the current platform. Validate a
 new platform/Python version before claiming the lock is portable. Mermaid updates
 are separate: obtain an exact npm release, preserve its LICENSE, replace the full
 browser bundle, and update provenance/checksums in the migration manifest before
 running every diagram and network check. Do not switch to an unpinned CDN URL.
+
+The 2026-10-22 refresh used Python 3.14.4. The existing application, test and
+documentation pins remained current; packaging tools are now pinned in the full
+development lockfile. `pyee` stays at 14.0.0 because Playwright 1.64.0 requires
+`pyee>=13,<15`; upgrading it to 15 would break that dependency constraint.
 
 ## Deployment and rollback
 
